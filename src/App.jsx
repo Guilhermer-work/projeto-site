@@ -13,7 +13,7 @@ export default function App() {
   const [fichas, setFichas] = useState([]);
   const [activeId, setActiveId] = useState(null);
 
-  const API = "http://localhost:4000";
+  const API = "https://pressagios.onrender.com";
 
   // Carregar token ao iniciar
   useEffect(() => {
