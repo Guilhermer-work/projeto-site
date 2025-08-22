@@ -1,0 +1,29 @@
+/* Tema pergaminho */
+.theme-parchment {
+  @apply bg-gradient-to-b from-[#f7f1d5] to-[#e6d8b8] text-zinc-900;
+}
+
+.theme-parchment .card {
+  @apply bg-[#fdf6e3] border border-[#c2a878] shadow-md;
+}
+
+.theme-parchment input,
+.theme-parchment select,
+.theme-parchment button {
+  @apply bg-[#faf3dd] border border-[#c2a878] text-zinc-900;
+}
+
+/* Tema dark */
+.theme-dark {
+  @apply bg-zinc-900 text-zinc-100;
+}
+
+.theme-dark .card {
+  @apply bg-zinc-800 border border-zinc-700 shadow-lg;
+}
+
+.theme-dark input,
+.theme-dark select,
+.theme-dark button {
+  @apply bg-zinc-900 border border-zinc-700 text-zinc-100;
+}
