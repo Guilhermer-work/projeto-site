@@ -9,6 +9,35 @@ import React, { useMemo, useState } from "react";
  * mas remove estados locais de dados do personagem para persistir no App.jsx.
  */
 
+// 🔹 Componente reutilizável para inputs com debounce
+function DebouncedInput({ value, onChange, delay = 300, ...props }) {
+  const [local, setLocal] = useState(value);
+
+  // quando a prop externa mudar, atualiza o valor local
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
+
+  // aplica debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (local !== value) {
+        onChange(local);
+      }
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [local]);
+
+  return (
+    <input
+      {...props}
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+    />
+  );
+}
+
 function DiceIcon({ className = "w-5 h-5" }) {
   return (
     <svg
@@ -752,8 +781,8 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
                             </label>
                             <label className="text-zinc-400 text-[11px]">Atributo
                               <select
-                                value={a.desc}
-                                onChange={(v) => updateAtaque(idx, { desc: v })}
+                                value={a.attr || "FOR"}
+                                onChange={(e) => updateAtaque(idx, { attr: e.target.value })}
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               >
                                 {ATTRS.map(at => (
