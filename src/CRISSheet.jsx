@@ -507,31 +507,31 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
               <div className="w-12 h-12 rounded-xl bg-zinc-800" />
               <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
                 <label className="text-zinc-400">Personagem
-                  <input
+                  <DebouncedInput
                     className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                     value={profile.nome}
-                    onChange={(e) => updateProfileField("nome", e.target.value)}
+                    onChange={(v) => updateProfileField("nome", v)}
                   />
                 </label>
                 <label className="text-zinc-400">Jogador
-                  <input
+                  <DebouncedInput
                     className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                     value={profile.jogador}
-                    onChange={(e) => updateProfileField("jogador", e.target.value)}
+                    onChange={(v) => updateProfileField("jogador", v)}
                   />
                 </label>
                 <label className="text-zinc-400">Classe
-                  <input
+                  <DebouncedInput
                     className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                     value={profile.classe}
-                    onChange={(e) => updateProfileField("classe", e.target.value)}
+                    onChange={(v) => updateProfileField("classe", v)}
                   />
                 </label>
                 <label className="text-zinc-400">Origem
-                  <input
+                  <DebouncedInput
                     className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                     value={profile.origem}
-                    onChange={(e) => updateProfileField("origem", e.target.value)}
+                    onChange={(v) => updateProfileField("origem", v)}
                   />
                 </label>
               </div>
@@ -544,7 +544,7 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
               {ATTRS.map((a) => (
                 <div key={a.key} className="bg-black/40 border border-zinc-700 rounded-lg p-1 text-center">
                   <div className="text-[10px] text-zinc-400 tracking-wider">{a.key}</div>
-                  <input
+                  <DebouncedInput
                     type="text"
                     className="w-full text-center bg-transparent font-bold text-base focus:outline-none"
                     value={attrs[a.key]}
@@ -722,38 +722,38 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
                         >
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <label className="text-zinc-400 text-[11px]">Nome
-                              <input
+                              <DebouncedInput
                                 value={a.nome}
-                                onChange={(e) => updateAtaque(idx, { nome: e.target.value })}
+                                onChange={(v) => updateAtaque(idx, { nome: v })}
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               />
                             </label>
                             <label className="text-zinc-400 text-[11px]">Dano
-                              <input
+                              <DebouncedInput
                                 value={a.dano}
-                                onChange={(e) => updateAtaque(idx, { dano: e.target.value })}
+                                onChange={(v) => updateAtaque(idx, { dano: v })}
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               />
                             </label>
                             <label className="text-zinc-400 text-[11px]">Crítico (ex: 19/x2)
-                              <input
+                              <DebouncedInput
                                 value={a.crit}
-                                onChange={(e) => updateAtaque(idx, { crit: e.target.value })}
+                                onChange={(v) => updateAtaque(idx, { crit: v })}
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               />
                             </label>
                             <label className="text-zinc-400 text-[11px]">Tipo de Dano
-                              <input
+                              <DebouncedInput
                                 value={a.tipo || ""}
-                                onChange={(e) => updateAtaque(idx, { tipo: e.target.value })}
+                                onChange={(v) => updateAtaque(idx, { tipo: v })}
                                 placeholder="Corte, perfuração..."
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               />
                             </label>
                             <label className="text-zinc-400 text-[11px]">Atributo
                               <select
-                                value={a.attr || "FOR"}
-                                onChange={(e) => updateAtaque(idx, { attr: e.target.value })}
+                                value={a.desc}
+                                onChange={(v) => updateAtaque(idx, { desc: v })}
                                 className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                               >
                                 {ATTRS.map(at => (
