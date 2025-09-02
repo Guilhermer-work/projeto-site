@@ -578,12 +578,18 @@ function rollAttr(attrKey) {
                   <div className="text-xs text-zinc-400">{k}</div>
 
                   <input
-                    type="number"
-                    value={attrs[k]}
-                    onChange={(e) =>
-                      setAttrs((prev) => ({ ...prev, [k]: Number(e.target.value) }))
-                    }
+                    type="text"
+                    inputMode="numeric"
+                    pattern="^-?\d*$"
+                    value={attrs[k] === 0 ? "" : attrs[k]}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (/^-?\d*$/.test(raw)) {
+                        setAttrs((prev) => ({ ...prev, [k]: Number(e.target.value) }))
+                      }
+                    }}
                     className="w-full text-center bg-transparent text-white appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    placeholder="0"
                   />
                 </div>
               ))}
