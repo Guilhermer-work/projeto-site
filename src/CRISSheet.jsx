@@ -356,7 +356,6 @@ function Roller({ onRoll }) {
 
 export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
-  <AttributeWheel attrs={attrs} rollAttr={rollAttr} />
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
   const [attrs, setAttrs] = useState({
     FOR: 0,
@@ -567,7 +566,7 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
           </SectionCard>
 
           <SectionCard title="Atributos">
-            <AttributeWheel values={attrs} rollAttr={rollAttr} />
+            <AttributeWheel attrs={attrs} rollAttr={rollAttr} />
             <div className="grid grid-cols-5 gap-2 mt-4">
               {Object.keys(attrs).map((k) => (
                 <div 
