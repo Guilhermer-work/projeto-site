@@ -404,9 +404,10 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   };
 
   const updatePericia = (name, field, value) => {
-    const base = pericias;
-    const next = base.map((p) =>
-      p.name === name ? { ...p, [field]: field === "outros" ? parseNum(value) : parseNum(value) } : p
+    const next = pericias.map((p) =>
+      p.name === name 
+        ? { ...p, [field]: field === "attr" ? value : parseNum(value) } 
+        : p
     );
     onUpdate({ pericias: next });
   };
@@ -664,8 +665,20 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
                           </button>
                           {p.name}
                         </td>
-                        <td className="py-1 text-zinc-400">({p.attr})</td>
+                        <td className="py-2 text-center">
+                          <select
+                            value={p.attr}
+                            onChange={(e) => updatePericia(p.name, "attr", e.target.value)}
+                            className="bg-black border border-zinc-700 rounded px-1 py-0.5 text-sm"
+                          >
+                            {ATTRS.map((at) => (
+                              <option key={at.key} value={at.key}>{at.key}</option>
+                            ))}
+                          </select>
+                        </td>
+
                         <td className="py-2 text-center">{bonus}</td>
+
                         <td className="py-2 text-center">
                           <select
                             value={p.treino}
