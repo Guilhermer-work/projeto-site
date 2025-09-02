@@ -520,7 +520,7 @@ function rollAttack(a) {
   const chosen = isPenalty ? Math.min(...d20s) : Math.max(...d20s);
   const isCrit = chosen >= critMin;
 
-  const skill = totalPericias.find((p) => p.name === a.skill);
+  const skill = pericias.find((p) => p.name === a.skill);
   const mod = (Number(skill?.treino) || 0) + (Number(skill?.outros) || 0);
 
   const { rolls, total: danoTotal } = parseDamage(a.dano, isCrit, critMult);
