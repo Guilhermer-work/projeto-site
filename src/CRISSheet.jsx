@@ -581,11 +581,20 @@ function rollAttr(attrKey) {
                     type="text"
                     inputMode="numeric"
                     pattern="^-?\d*$"
-                    value={attrs[k] === 0 ? "" : attrs[k]}
+                    value={String(attrs[k])}
                     onChange={(e) => {
                       const raw = e.target.value;
-                      if (/^-?\d*$/.test(raw)) {
-                        setAttrs((prev) => ({ ...prev, [k]: Number(e.target.value) }))
+                      if (raw === "" || raw === "-") {
+                        setAttrs((prev) => ({ ...prev, [k]: raw }));
+                        return;
+                      }
+                    if (/^-?\d+$/.test(raw)) {
+                      setAttrs((prev) => ({ ...prev, [k]: Number(raw) }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (isNaN(Number(e.target.value))) {
+                        setAttrs((prev) => ({ ...prev, [k]: 0 }));
                       }
                     }}
                     className="w-full text-center bg-transparent text-white appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
