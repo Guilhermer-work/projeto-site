@@ -444,6 +444,8 @@ function rollAttr(attrKey) {
     d20s: rolls,
     best,
     total: best,
+    diceCount, // ✅ Isso aqui que estava faltando
+    rolls,     // você já tinha isso
   });
 
   setTimeout(() => setRollResult(null), 5000);
