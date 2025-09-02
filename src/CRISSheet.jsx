@@ -420,15 +420,31 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   };
 
   // 🎲 Rolagens (mesma lógica do original, só usando `attrs`/`pericias`/`ataques` vindos da ficha)
-  function rollSkill(p) {
-    const diceCount = Math.max(1, Number(attrs[p.attr]) || 0); // quantidade de dados = atributo
-    const mod = (Number(p.treino) || 0) + (Number(p.outros) || 0); // bônus = treino + outros
-    const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
-    const best = Math.max(...rolls); // pega o melhor dado
-    const total = best + mod; // soma com o modificador
-    setRollResult({ type: "pericia", name: p.name, attr: p.attr, diceCount, rolls, best, mod, total });
-    setTimeout(() => setRollResult(null), 5000);
-  }
+function rollSkill(p) {
+  const attrValue = attrs[p.attr] ?? 0;
+  const isPenalty = attrValue <= 0;
+  const diceCount = isPenalty ? Math.abs(attrValue) + 2 : attrValue;
+  const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
+  const chosen = isPenalty ? Math.min(...rolls) : Math.max(...rolls);
+
+  const mod = (Number(p.treino) || 0) + (Number(p.outros) || 0);
+  const total = chosen + mod;
+
+  setRollResult({
+    type: "pericia",
+    name: p.name,
+    attr: p.attr,
+    diceCount,
+    rolls,
+    best: chosen,
+    mod,
+    total,
+    isPenalty,
+  });
+
+  setTimeout(() => setRollResult(null), 5000);
+}
+
 
 function rollAttr(attrKey) {
   const val = attrs[attrKey] ?? 0;
@@ -494,39 +510,41 @@ function rollAttr(attrKey) {
     return { rolls, total, mod };
   }
 
-  function rollAttack(a) {
-    const { critMin, critMult } = parseCrit(a.crit);
+function rollAttack(a) {
+  const { critMin, critMult } = parseCrit(a.crit || "20/x2");
 
-    const diceCount = Math.max(1, Number(attrs[a.attr]) || 0);
-    const d20s = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
-    const best = Math.max(...d20s);
-    const isCrit = best >= critMin;
+  const attrValue = attrs[a.attr] ?? 0;
+  const isPenalty = attrValue <= 0;
+  const diceCount = isPenalty ? Math.abs(attrValue) + 2 : attrValue;
+  const d20s = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
+  const chosen = isPenalty ? Math.min(...d20s) : Math.max(...d20s);
+  const isCrit = chosen >= critMin;
 
-    // bônus vem só da perícia (treino + outros)
-    const skill = pericias.find(p => p.name === a.skill);
-    const mod = (Number(skill?.treino) || 0) + (Number(skill?.outros) || 0);
+  const skill = totalPericias.find((p) => p.name === a.skill);
+  const mod = (Number(skill?.treino) || 0) + (Number(skill?.outros) || 0);
 
-    // Dano
-    const { rolls, total: danoTotal } = parseDamage(a.dano, isCrit, critMult);
+  const { rolls, total: danoTotal } = parseDamage(a.dano, isCrit, critMult);
 
-    setRollResult({
-      type: "ataque",
-      name: a.nome,
-      attr: a.attr,
-      d20s,
-      best,
-      isCrit,
-      mod,
-      total: best + mod,
-      rolls,
-      danoTotal,
-      critMin,   // usa os parseados!
-      critMult,  // usa os parseados!
-      tipo: a.tipo
-    });
+  setRollResult({
+    type: "ataque",
+    name: a.nome,
+    attr: a.attr,
+    d20s,
+    best: chosen,
+    isCrit,
+    mod,
+    total: chosen + mod,
+    rolls,
+    danoTotal,
+    critMin,
+    critMult,
+    tipo: a.tipo,
+    isPenalty,
+    diceCount,
+  });
 
-    setTimeout(() => setRollResult(null), 5000);
-  }
+  setTimeout(() => setRollResult(null), 5000);
+}
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
@@ -744,7 +762,8 @@ function rollAttr(attrKey) {
                 <div className="text-xs text-zinc-400">Rolagem de Perícia: {rollResult.name} ({rollResult.attr})</div>
                 <div className="text-lg font-bold">{rollResult.total}</div>
                 <div className="text-xs text-zinc-400">
-                  {rollResult.diceCount}d20 → [{rollResult.rolls.join(", ")}] | melhor: {rollResult.best} + bônus {rollResult.mod}
+                  {rollResult.diceCount}d20 → [{rollResult.rolls.join(", ")}] |{" "}
+                  {rollResult.isPenalty ? "pior" : "melhor"}: {rollResult.best} + bônus {rollResult.mod}
                 </div>
               </div>
             )}
@@ -904,7 +923,8 @@ function rollAttr(attrKey) {
               {rollResult.isCrit && <span className="text-red-500 font-bold">(CRÍTICO!)</span>}
             </div>
             <div className="text-sm text-zinc-300">
-              d20s: [{rollResult.d20s.join(", ")}] → melhor: {rollResult.best} + bônus: {rollResult.mod}
+              {rollResult.diceCount}d20 → [{rollResult.d20s.join(", ")}] →{" "}
+              {rollResult.isPenalty ? "pior" : "melhor"}: {rollResult.best} + bônus: {rollResult.mod}
             </div>
             <div className="text-lg font-bold">Total: {rollResult.total}</div>
             <div className="text-sm text-zinc-300 mt-2">
