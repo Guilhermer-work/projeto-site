@@ -431,21 +431,33 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   }
 
 function rollAttr(attrKey) {
-  const val = attrs[attrKey] || 0;
-  const diceCount = Math.max(1, val);
+  const val = attrs[attrKey] ?? 0;
 
-  // Rola N d20 e pega o melhor
-  const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
-  const best = Math.max(...rolls);
+  let diceCount = 1;
+  let rolls = [];
+  let result = 0;
+  let best = 0;
+
+  if (val > 0) {
+    diceCount = val;
+    rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
+    best = Math.max(...rolls);
+    result = best;
+  } else {
+    diceCount = Math.abs(val) + 2; // 0 → 2 dados, -1 → 3 dados...
+    rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
+    best = Math.min(...rolls);
+    result = best;
+  }
 
   setRollResult({
     type: "atributo",
     name: attrKey,
-    d20s: rolls,
+    diceCount,
+    rolls,
     best,
-    total: best,
-    diceCount, // ✅ Isso aqui que estava faltando
-    rolls,     // você já tinha isso
+    total: result,
+    isPenalty: val <= 0,
   });
 
   setTimeout(() => setRollResult(null), 5000);
@@ -911,7 +923,8 @@ function rollAttr(attrKey) {
             </div>
             <div className="text-lg font-bold">{rollResult.total}</div>
             <div className="text-xs text-zinc-400">
-              {rollResult.diceCount}d20 → [{rollResult.rolls.join(", ")}] | melhor: {rollResult.best}
+              {rollResult.diceCount}d20 → [{rollResult.rolls.join(", ")}] |{" "}
+              {rollResult.isPenalty ? "pior:" : "melhor:"} {rollResult.best}
             </div>
           </div>
         )}
