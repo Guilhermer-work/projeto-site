@@ -276,7 +276,7 @@ function Collapsible({ title, subtitle, children, action }) {
   );
 }
 
-function AttributeWheel({ values, rollAttr }) {
+function AttributeWheel({ attrs, rollAttr }) {
   const order = ["AGI", "INT", "VIG", "PRE", "FOR"];
 
   return (
@@ -287,18 +287,19 @@ function AttributeWheel({ values, rollAttr }) {
         const r = 110;
         const cx = 128 + r * Math.cos(angle);
         const cy = 128 + r * Math.sin(angle);
+
         return (
-          <button
+          <div
             key={k}
-            onClick={() => rollAttr(k)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 text-center cursor-pointer group"
+            className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
             style={{ left: cx, top: cy }}
           >
-            <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold transition group-hover:bg-purple-600/30">
-              {values[k]}
+            {/* esse valor vem do state e atualiza em tempo real */}
+            <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold">
+              {attrs[k]}
             </div>
             <div className="mt-1 text-[10px] text-zinc-400 tracking-wider">{k}</div>
-          </button>
+          </div>
         );
       })}
     </div>
