@@ -398,18 +398,18 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
     });
   };
 
-  const updateAttr = (key, value) => {
-    onUpdate({
-      attrs: {
-        ...attrs,
-        [key]: { ...attrs[key], base: Number(value) }
-      },
-    });
-  };
-  console.log("Novo atributo:", key, value, {
+const updateAttr = (key, value) => {
+  const novoAttrs = {
     ...attrs,
     [key]: { ...attrs[key], base: Number(value) }
+  };
+
+  console.log("Novo atributo:", key, value, novoAttrs);
+
+  onUpdate({
+    attrs: novoAttrs,
   });
+};
 
   const updateBar = (bar, field, value) => {
     const current = bar === "hp" ? hp : bar === "san" ? san : esf;
