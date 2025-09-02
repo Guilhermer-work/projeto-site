@@ -28,14 +28,3 @@
   @apply bg-zinc-900 border border-zinc-700 text-zinc-100;
 }
 
-/* Esconde setinhas no Chrome, Edge e Safari */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Esconde setinhas no Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
