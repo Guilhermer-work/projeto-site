@@ -406,6 +406,10 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
       },
     });
   };
+  console.log("Novo atributo:", key, value, {
+    ...attrs,
+    [key]: { ...attrs[key], base: Number(value) }
+  });
 
   const updateBar = (bar, field, value) => {
     const current = bar === "hp" ? hp : bar === "san" ? san : esf;
@@ -434,7 +438,7 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
 
   // 🎲 Rolagens (mesma lógica do original, só usando `attrs`/`pericias`/`ataques` vindos da ficha)
   function rollSkill(p) {
-    const diceCount = Math.max(1, getAttrTotal(p.attr)); // quantidade de dados = atributo
+    const diceCount = Math.max(1, Number(attrs[p.attr]) || 0); // quantidade de dados = atributo
     const mod = (Number(p.treino) || 0) + (Number(p.outros) || 0); // bônus = treino + outros
     const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
     const best = Math.max(...rolls); // pega o melhor dado
@@ -444,7 +448,7 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   }
 
   function rollAttr(attrKey) {
-    const diceCount = Math.max(1, getAttrTotal(attrKey));
+    const diceCount = Math.max(1, Number(attrs[attrKey]) || 0);
 
     // rola N d20 e pega o melhor
     const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
@@ -496,7 +500,7 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   function rollAttack(a) {
     const { critMin, critMult } = parseCrit(a.crit);
 
-    const diceCount = Math.max(1, getAttrTotal(a.attr));
+    const diceCount = Math.max(1, Number(attrs[a.attr]) || 0);
     const d20s = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
     const best = Math.max(...d20s);
     const isCrit = best >= critMin;
