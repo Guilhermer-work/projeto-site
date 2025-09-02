@@ -278,7 +278,6 @@ function Collapsible({ title, subtitle, children, action }) {
 
 function AttributeWheel({ attrs, rollAttr }) {
   const order = ["AGI", "INT", "VIG", "PRE", "FOR"];
-
   return (
     <div className="relative w-64 h-64 mx-auto">
       <div className="absolute inset-0 rounded-full border-2 border-zinc-700" />
@@ -287,18 +286,19 @@ function AttributeWheel({ attrs, rollAttr }) {
         const r = 110;
         const cx = 128 + r * Math.cos(angle);
         const cy = 128 + r * Math.sin(angle);
-
+        const val = attrs[k] ?? 0;
         return (
-          <div
+          <button
             key={k}
-            className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
+            onClick={() => rollAttr(k)}
+            className="absolute -translate-x-1/2 -translate-y-1/2 text-center cursor-pointer group"
             style={{ left: cx, top: cy }}
           >
-            <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold">
-              {attrs[k] ?? 0}
+            <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold transition group-hover:bg-purple-700/30">
+              {val}
             </div>
             <div className="mt-1 text-[10px] text-zinc-400 tracking-wider">{k}</div>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -430,24 +430,24 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
     setTimeout(() => setRollResult(null), 5000);
   }
 
-  function rollAttr(attrKey) {
-    const diceCount = Math.max(1, Number(attrs[attrKey]) || 0);
+function rollAttr(attrKey) {
+  const val = attrs[attrKey] || 0;
+  const diceCount = Math.max(1, val);
 
-    // rola N d20 e pega o melhor
-    const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
-    const best = Math.max(...rolls);
+  // Rola N d20 e pega o melhor
+  const rolls = Array.from({ length: diceCount }, () => 1 + Math.floor(Math.random() * 20));
+  const best = Math.max(...rolls);
 
-    setRollResult({
-      type: "atributo",
-      name: attrKey,
-      diceCount,
-      rolls,
-      best,
-      total: best
-    });
+  setRollResult({
+    type: "atributo",
+    name: attrKey,
+    d20s: rolls,
+    best,
+    total: best,
+  });
 
-    setTimeout(() => setRollResult(null), 5000);
-  }
+  setTimeout(() => setRollResult(null), 5000);
+}
 
   function parseCrit(critStr) {
     if (!critStr) return { critMin: 20, critMult: 2 }; // padrão
