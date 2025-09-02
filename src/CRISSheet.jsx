@@ -288,7 +288,9 @@ function AttributeWheel({ values, rollAttr }) {
         const r = 110;
         const cx = 128 + r * Math.cos(angle);
         const cy = 128 + r * Math.sin(angle);
-        const val = (values[k]?.base || 0) + (values[k]?.mod || 0);
+        const val = typeof values[k] === "number"
+        ? values[k]
+        : (values[k]?.base || 0) + (values[k]?.mod || 0);
 
         return (
           <button
@@ -366,7 +368,13 @@ function Roller({ onRoll }) {
 export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
-  const attrs = ficha?.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
+  const attrs = ficha?.attrs ?? { 
+    FOR: { base: 0, mod: 0 },
+    AGI: { base: 0, mod: 0 },
+    INT: { base: 0, mod: 0 },
+    PRE: { base: 0, mod: 0 },
+    VIG: { base: 0, mod: 0 }, 
+  };
   const hp = ficha?.hp ?? { atual: 10, max: 10 };
   const san = ficha?.san ?? { atual: 10, max: 10 };
   const esf = ficha?.esf ?? { atual: 10, max: 10 };
@@ -391,9 +399,11 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   };
 
   const updateAttr = (key, value) => {
-    const num = Number(value);
     onUpdate({
-      attrs: { ...attrs, [key]: Number.isNaN(num) ? 0 : num },
+      attrs: {
+        ...attrs,
+        [key]: { ...attrs[key], base: Number(value) }
+      },
     });
   };
 
