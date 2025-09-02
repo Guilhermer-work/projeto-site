@@ -277,42 +277,30 @@ function Collapsible({ title, subtitle, children, action }) {
 }
 
 function AttributeWheel({ values, rollAttr }) {
-  // ordem fixa no círculo
-  const order = ["AGI", "INT", "VIG", "PRE", "FOR"]; // sentido horário
+  const order = ["AGI", "INT", "VIG", "PRE", "FOR"];
+
   return (
     <div className="relative w-64 h-64 mx-auto">
       <div className="absolute inset-0 rounded-full border-2 border-zinc-700" />
-
       {order.map((k, i) => {
         const angle = (i / order.length) * 2 * Math.PI - Math.PI / 2;
         const r = 110;
         const cx = 128 + r * Math.cos(angle);
         const cy = 128 + r * Math.sin(angle);
-        const val = typeof values[k] === "number"
-        ? values[k]
-        : (values[k]?.base || 0) + (values[k]?.mod || 0);
-
         return (
           <button
             key={k}
-            onClick={() => rollAttr(k)}   // 👈 chama a rolagem
+            onClick={() => rollAttr(k)}
             className="absolute -translate-x-1/2 -translate-y-1/2 text-center cursor-pointer group"
             style={{ left: cx, top: cy }}
           >
-            <div className="w-12 h-12 rounded-full grid place-items-center border border-violet-500 bg-zinc-900 text-zinc-100 text-lg font-semibold transition group-hover:bg-violet-600/30">
-              {val}
+            <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold transition group-hover:bg-purple-600/30">
+              {values[k]}
             </div>
             <div className="mt-1 text-[10px] text-zinc-400 tracking-wider">{k}</div>
           </button>
         );
       })}
-
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-        <div className="w-16 h-16 rounded-full grid place-items-center border-2 border-zinc-600 bg-zinc-950 text-zinc-100 text-xl font-bold">
-          ATR
-        </div>
-        <div className="text-[10px] text-zinc-400">ATRIBUTOS</div>
-      </div>
     </div>
   );
 }
@@ -368,13 +356,13 @@ function Roller({ onRoll }) {
 export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
-  const attrs = ficha?.attrs ?? { 
-    FOR: { base: 0, mod: 0 },
-    AGI: { base: 0, mod: 0 },
-    INT: { base: 0, mod: 0 },
-    PRE: { base: 0, mod: 0 },
-    VIG: { base: 0, mod: 0 }, 
-  };
+  const [attrs, setAttrs] = useState({
+    FOR: 0,
+    AGI: 0,
+    INT: 0,
+    PRE: 0,
+    VIG: 0,
+  });
   const hp = ficha?.hp ?? { atual: 10, max: 10 };
   const san = ficha?.san ?? { atual: 10, max: 10 };
   const esf = ficha?.esf ?? { atual: 10, max: 10 };
@@ -398,18 +386,12 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
     });
   };
 
-const updateAttr = (key, value) => {
-  const novoAttrs = {
-    ...attrs,
-    [key]: { ...attrs[key], base: Number(value) }
+  const updateAttr = (key, value) => {
+    const num = Number(value);
+    onUpdate({
+      attrs: { ...attrs, [key]: Number.isNaN(num) ? 0 : num },
+    });
   };
-
-  console.log("Novo atributo:", key, value, novoAttrs);
-
-  onUpdate({
-    attrs: novoAttrs,
-  });
-};
 
   const updateBar = (bar, field, value) => {
     const current = bar === "hp" ? hp : bar === "san" ? san : esf;
@@ -584,15 +566,21 @@ const updateAttr = (key, value) => {
 
           <SectionCard title="Atributos">
             <AttributeWheel values={attrs} rollAttr={rollAttr} />
-            <div className="grid grid-cols-5 gap-1 mt-2">
-              {ATTRS.map((a) => (
-                <div key={a.key} className="bg-black/40 border border-zinc-700 rounded-lg p-1 text-center">
-                  <div className="text-[10px] text-zinc-400 tracking-wider">{a.key}</div>
-                  <DebouncedInput
-                    type="text"
-                    className="w-full text-center bg-transparent font-bold text-base focus:outline-none"
-                    value={attrs[a.key]}
-                    onChange={(e) => updateAttr(a.key, e.target.value)}
+            <div className="grid grid-cols-5 gap-2 mt-4">
+              {Object.keys(attrs).map((k) => (
+                <div 
+                key={k} 
+                className="p-2 rounded-lg border border-zinc-700 text-center bg-zinc-900"
+                >
+                  <div className="text-xs text-zinc-400">{k}</div>
+
+                  <input
+                    type="number"
+                    value={attrs[k]}
+                    onChange={(e) =>
+                      setAttrs((prev) => ({ ...prev, [k]: Number(e.target.value) }))
+                    }
+                    className="w-full text-center bg-transparent text-white"
                   />
                 </div>
               ))}
