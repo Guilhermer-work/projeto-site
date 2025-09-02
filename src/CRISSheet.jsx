@@ -583,7 +583,7 @@ function rollAttr(attrKey) {
                     onChange={(e) =>
                       setAttrs((prev) => ({ ...prev, [k]: Number(e.target.value) }))
                     }
-                    className="w-full text-center bg-transparent text-white"
+                    className="w-full text-center bg-transparent text-white appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                   />
                 </div>
               ))}
