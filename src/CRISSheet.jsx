@@ -294,9 +294,8 @@ function AttributeWheel({ attrs, rollAttr }) {
             className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
             style={{ left: cx, top: cy }}
           >
-            {/* esse valor vem do state e atualiza em tempo real */}
             <div className="w-12 h-12 rounded-full grid place-items-center border border-purple-500 bg-black text-white text-lg font-semibold">
-              {attrs[k]}
+              {attrs[k] ?? 0}
             </div>
             <div className="mt-1 text-[10px] text-zinc-400 tracking-wider">{k}</div>
           </div>
@@ -305,6 +304,7 @@ function AttributeWheel({ attrs, rollAttr }) {
     </div>
   );
 }
+
 
 function Roller({ onRoll }) {
   const [expr, setExpr] = useState("1d20+3");
@@ -356,6 +356,7 @@ function Roller({ onRoll }) {
 
 export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
+  <AttributeWheel attrs={attrs} rollAttr={rollAttr} />
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
   const [attrs, setAttrs] = useState({
     FOR: 0,
