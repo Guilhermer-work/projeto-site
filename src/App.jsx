@@ -169,6 +169,25 @@ export default function App() {
     }
   };
 
+  const deletarFicha = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!window.confirm("Tem certeza que deseja excluir esta ficha?")) return;
+
+    try {
+        await fetch(`${API}/fichas/${id}`, {
+            method: "DELETE",
+            headers: {Authorization: `Bearer ${token}`},
+        });
+
+        setFichas((prev) => prev.filter((f) => f.id !== id));
+
+        if (activeId === id) setActiveId(null);
+
+    } catch {
+        alert("Erro ao deletar ficha");
+    }
+  };
+
   // Navegação do Header
   const handleNavigate = (dest) => {
     if (dest === "personagens") setActiveId(null);
@@ -296,6 +315,7 @@ export default function App() {
         {fichas.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {fichas.map((f) => (
+
               <div
                 key={f.id}
                 onClick={() => setActiveId(f.id)}
@@ -339,6 +359,16 @@ export default function App() {
         )}
 
         <div className="flex justify-center">
+          <button
+            onClick={() => {
+                e.stopPropagation();
+                deletarFicha(f.id);
+                }}
+            className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+            title="Deletar Ficha"
+              >
+                ❌
+          </button>
           <button
             onClick={criarFicha}
             className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 
