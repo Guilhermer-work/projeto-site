@@ -299,41 +299,52 @@ export default function App() {
   }
 
   // Ficha ativa
-  if (activeId) {
-    const ficha = fichas.find((f) => f.id === activeId);
-    const dados = ficha?.dados || ficha;
-    return (
-      <>
-        <Header onNavigate={handleNavigate} />
-        <div className="flex justify-end p-2">
-          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
-            Sair
-          </button>
-        </div>
-        <CRISSheet ficha={dados} onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)} onVoltar={() => setActiveId(null)} />
-      </>
-    );
-  }
+if (activeId) {
+  const ficha = fichas.find((f) => f.id === activeId);
+  const dados = ficha?.dados || ficha;
+  return (
+    <>
+      <Header onNavigate={handleNavigate} />
+      <div className="flex justify-end p-2">
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg"
+        >
+          Sair
+        </button>
+      </div>
+      <CRISSheet
+        ficha={dados}
+        onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
+        onVoltar={() => setActiveId(null)}
+      />
+    </>
+  );
+}
 
-  // Campanha ativa
-  if (activeCampanhaId) {
-    const campanha = campanhas.find((c) => c.id === activeCampanhaId);
-    return (
-      <>
-        <Header onNavigate={handleNavigate} />
-        <div className="flex justify-end p-2">
-          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
-            Sair
-          </button>
-        </div>
-        <div className="p-8 text-center">
-          <h1 className="text-3xl font-bold mb-4">📜 {campanha?.titulo}</h1>
-          <p className="text-zinc-400">Mestre da campanha: você</p>
-          <p className="text-sm text-zinc-500 mt-2">Link para compartilhar com jogadores em breve...</p>
-        </div>
-      </>
-    );
-  }
+// Campanha ativa
+if (activeCampanhaId) {
+  const campanha = campanhas.find((c) => c.id === activeCampanhaId);
+  return (
+    <>
+      <Header onNavigate={handleNavigate} />
+      <div className="flex justify-end p-2">
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg"
+        >
+          Sair
+        </button>
+      </div>
+      <CampanhaSheet
+        campanha={campanha}
+        onUpdate={(novosDados) => atualizarCampanha(activeCampanhaId, novosDados)}
+        onVoltar={() => setActiveCampanhaId(null)}
+      />
+    </>
+  );
+}
+
 
   // Lista de fichas e campanhas
   return (
