@@ -13,6 +13,10 @@ export default function App() {
   const [fichas, setFichas] = useState([]);
   const [activeId, setActiveId] = useState(null);
 
+  // ----------- Estado do modal de exclusão -----------
+  const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
+
+
   const API = "https://pressagios-login.onrender.com";
 
   // Carregar token ao iniciar
@@ -171,7 +175,6 @@ export default function App() {
 
   const deletarFicha = async (id) => {
     const token = localStorage.getItem("token");
-    if (!window.confirm("Tem certeza que deseja excluir esta ficha?")) return;
 
     try {
         await fetch(`${API}/fichas/${id}`, {
@@ -328,7 +331,7 @@ export default function App() {
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        deletarFicha(f.id);
+                        setFichaParaDeletar(f.id);
                    }}
                    className="absolute top-2 right-2 text-red-400 hover:text-red-600"
                    title="Deletar Ficha"
@@ -367,6 +370,33 @@ export default function App() {
             Nenhuma ficha criada ainda...
           </p>
         )}
+{fichaParaDeletar && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+      <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
+      <p className="text-zinc-300 mb-6">
+        Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
+      </p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => setFichaParaDeletar(null)}
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={() => {
+            deletarFicha(fichaParaDeletar);
+            setFichaParaDeletar(null);
+          }}
+          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+        >
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
         <div className="flex justify-center">
           <button
