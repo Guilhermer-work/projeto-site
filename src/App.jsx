@@ -325,6 +325,16 @@ export default function App() {
                            hover:shadow-lg hover:shadow-violet-500/20
                            transition-all group"
               >
+                <button
+                    onClick={() => {
+                        e.stopPropagation();
+                        deletarFicha(f.id);
+                   }}
+                   className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+                   title="Deletar Ficha"
+                >
+                    ❌
+                </button>
                 <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
                 <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
                   {f.dados?.profile?.nome || "Personagem Sem Nome"}
@@ -359,16 +369,6 @@ export default function App() {
         )}
 
         <div className="flex justify-center">
-          <button
-            onClick={() => {
-                e.stopPropagation();
-                deletarFicha(f.id);
-                }}
-            className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-            title="Deletar Ficha"
-              >
-                ❌
-          </button>
           <button
             onClick={criarFicha}
             className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 
