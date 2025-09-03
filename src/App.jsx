@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CRISSheet from "./CRISSheet";
 import Header from "./Header";
+import CampanhaSheet from "./CampanhaSheet";
 
 export default function App() {
   // ----------- Estados de autenticação -----------
@@ -344,7 +345,6 @@ if (activeCampanhaId) {
     </>
   );
 }
-
 
   // Lista de fichas e campanhas
   return (
