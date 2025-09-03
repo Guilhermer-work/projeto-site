@@ -326,7 +326,7 @@ export default function App() {
                            transition-all group"
               >
                 <button
-                    onClick={() => {
+                    onClick={(e) => {
                         e.stopPropagation();
                         deletarFicha(f.id);
                    }}
