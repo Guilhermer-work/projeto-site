@@ -307,10 +307,7 @@ if (activeId) {
     <>
       <Header onNavigate={handleNavigate} />
       <div className="flex justify-end p-2">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg"
-        >
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
           Sair
         </button>
       </div>
@@ -330,16 +327,18 @@ if (activeCampanhaId) {
     <>
       <Header onNavigate={handleNavigate} />
       <div className="flex justify-end p-2">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg"
-        >
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
           Sair
         </button>
       </div>
       <CampanhaSheet
         campanha={campanha}
-        onUpdate={(novosDados) => atualizarCampanha(activeCampanhaId, novosDados)}
+        onUpdate={(dadosAtualizados) => {
+          const novaLista = campanhas.map((c) =>
+            c.id === campanha.id ? { ...c, ...dadosAtualizados } : c
+          );
+          setCampanhas(novaLista);
+        }}
         onVoltar={() => setActiveCampanhaId(null)}
       />
     </>
