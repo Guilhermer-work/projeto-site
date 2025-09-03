@@ -16,6 +16,9 @@ export default function App() {
   // ----------- Estado do modal de exclusão -----------
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
 
+  // ----------- Estado das campanhas -----------
+  const [campanhas, setCampanhas] = useState([]);
+  const [activeCampanhaId, setActiveCampanhaId] = useState(null);
 
   const API = "https://pressagios-login.onrender.com";
 
@@ -25,6 +28,7 @@ export default function App() {
     if (token) {
       setIsLoggedIn(true);
       carregarFichas(token);
+      carregarCampanhas(token);
     }
   }, []);
 
@@ -48,6 +52,7 @@ export default function App() {
         localStorage.setItem("token", data.token);
         setIsLoggedIn(true);
         carregarFichas(data.token);
+        carregarCampanhas(data.token);
       } else {
         alert(data.error || "Erro no login");
       }
@@ -87,6 +92,7 @@ export default function App() {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     setFichas([]);
+    setCampanhas([]);
   };
 
   // ----------- Funções das fichas -----------
@@ -144,26 +150,22 @@ export default function App() {
       ...fichaAtual.dados,
       ...novosDados,
     };
-      
 
     try {
-      const res = await fetch(`${API}/fichas/${id}`, {
+      await fetch(`${API}/fichas/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           nome: fichaFinal.profile?.nome || "Sem nome",
           dados: fichaFinal,
         }),
       });
 
-      const result = await res.json();
-
-
       setFichas((prev) =>
-        prev.map((f) => 
+        prev.map((f) =>
           f.id === id ? { ...f, nome: fichaFinal.profile?.nome, dados: fichaFinal } : f
         )
       );
@@ -177,24 +179,65 @@ export default function App() {
     const token = localStorage.getItem("token");
 
     try {
-        await fetch(`${API}/fichas/${id}`, {
-            method: "DELETE",
-            headers: {Authorization: `Bearer ${token}`},
-        });
+      await fetch(`${API}/fichas/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        setFichas((prev) => prev.filter((f) => f.id !== id));
-
-        if (activeId === id) setActiveId(null);
-
+      setFichas((prev) => prev.filter((f) => f.id !== id));
+      if (activeId === id) setActiveId(null);
     } catch {
-        alert("Erro ao deletar ficha");
+      alert("Erro ao deletar ficha");
+    }
+  };
+
+  // ----------- Funções das campanhas -----------
+  const carregarCampanhas = async (token) => {
+    try {
+      const res = await fetch(`${API}/campanhas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCampanhas(data);
+      }
+    } catch {
+      console.error("Erro ao carregar campanhas");
+    }
+  };
+
+  const criarCampanha = async () => {
+    const token = localStorage.getItem("token");
+    const nova = { titulo: "Nova Campanha", mestre: true, jogadores: [] };
+
+    try {
+      const res = await fetch(`${API}/campanhas`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(nova),
+      });
+
+      const data = await res.json();
+      setCampanhas([...campanhas, { id: data.id, ...nova }]);
+      setActiveCampanhaId(data.id);
+    } catch {
+      alert("Erro ao criar campanha");
     }
   };
 
   // Navegação do Header
   const handleNavigate = (dest) => {
-    if (dest === "personagens") setActiveId(null);
-    if (dest === "campanhas") alert("🚧 Em breve: Campanhas");
+    if (dest === "personagens") {
+      setActiveId(null);
+      setActiveCampanhaId(null);
+    }
+    if (dest === "campanhas") {
+      setActiveId(null);
+      setActiveCampanhaId(null);
+    }
   };
 
   // ----------- Renderização -----------
@@ -215,8 +258,7 @@ export default function App() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
             <input
               type="password"
@@ -224,45 +266,30 @@ export default function App() {
               placeholder="Senha"
               value={form.password}
               onChange={handleChange}
-              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full ${
-                loading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-violet-600 hover:bg-violet-500"
-              } text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-violet-500/30 transition-all`}
+              className={`w-full ${loading ? "bg-gray-500 cursor-not-allowed" : "bg-violet-600 hover:bg-violet-500"} text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-violet-500/30 transition-all`}
             >
-              {loading
-                ? "Carregando..."
-                : isRegistering
-                ? "Registrar"
-                : "Entrar"}
+              {loading ? "Carregando..." : isRegistering ? "Registrar" : "Entrar"}
             </button>
           </form>
 
           <p className="text-center mt-6 text-sm text-zinc-400">
             {isRegistering ? (
               <>
-                Já tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(false)}
-                >
+                Já tem conta? {" "}
+                <button className="text-violet-400 hover:underline" onClick={() => setIsRegistering(false)}>
                   Fazer login
                 </button>
               </>
             ) : (
               <>
-                Não tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(true)}
-                >
+                Não tem conta? {" "}
+                <button className="text-violet-400 hover:underline" onClick={() => setIsRegistering(true)}>
                   Criar conta
                 </button>
               </>
@@ -281,133 +308,121 @@ export default function App() {
       <>
         <Header onNavigate={handleNavigate} />
         <div className="flex justify-end p-2">
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg"
-          >
+          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
             Sair
           </button>
         </div>
-        <CRISSheet
-          ficha={dados}
-          onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
-          onVoltar={() => setActiveId(null)}
-        />
+        <CRISSheet ficha={dados} onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)} onVoltar={() => setActiveId(null)} />
       </>
     );
   }
 
-  // Lista de fichas
+  // Campanha ativa
+  if (activeCampanhaId) {
+    const campanha = campanhas.find((c) => c.id === activeCampanhaId);
+    return (
+      <>
+        <Header onNavigate={handleNavigate} />
+        <div className="flex justify-end p-2">
+          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
+            Sair
+          </button>
+        </div>
+        <div className="p-8 text-center">
+          <h1 className="text-3xl font-bold mb-4">📜 {campanha?.titulo}</h1>
+          <p className="text-zinc-400">Mestre da campanha: você</p>
+          <p className="text-sm text-zinc-500 mt-2">Link para compartilhar com jogadores em breve...</p>
+        </div>
+      </>
+    );
+  }
+
+  // Lista de fichas e campanhas
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white">
       <Header onNavigate={handleNavigate} />
       <div className="flex justify-end p-4">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg"
-        >
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg">
           Sair
         </button>
       </div>
 
-      <main className="p-8">
-        <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">
-          🎭 Personagens Registrados
-        </h1>
-
-        {fichas.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {fichas.map((f) => (
-
-              <div
-                key={f.id}
-                onClick={() => setActiveId(f.id)}
-                className="cursor-pointer relative p-6 rounded-2xl
-                           bg-gradient-to-br from-zinc-900 to-zinc-800
-                           border border-zinc-700 hover:border-violet-500
-                           hover:shadow-lg hover:shadow-violet-500/20
-                           transition-all group"
-              >
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setFichaParaDeletar(f.id);
-                   }}
-                   className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-                   title="Deletar Ficha"
+      <main className="p-8 space-y-12">
+        {/* Fichas */}
+        <section>
+          <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">🎭 Personagens Registrados</h1>
+          {fichas.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {fichas.map((f) => (
+                <div
+                  key={f.id}
+                  onClick={() => setActiveId(f.id)}
+                  className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
                 >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFichaParaDeletar(f.id);
+                    }}
+                    className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+                    title="Deletar Ficha"
+                  >
                     ❌
-                </button>
-                <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
-                <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
-                  {f.dados?.profile?.nome || "Personagem Sem Nome"}
+                  </button>
+                  <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
+                  <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
+                    {f.dados?.profile?.nome || "Personagem Sem Nome"}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">👤 {f.dados?.profile?.jogador || "Jogador Desconhecido"}</div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400">📖 {f.dados?.profile?.origem || "Sem origem"}</div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">⚔️ {f.dados?.profile?.classe || "Sem classe"}</div>
+                  <div className="flex gap-2 text-xs font-medium">
+                    <span className="px-2 py-1 bg-red-600/40 rounded-md text-red-300">HP {f.dados?.hp?.atual}/{f.dados?.hp?.max}</span>
+                    <span className="px-2 py-1 bg-purple-600/40 rounded-md text-purple-300">SAN {f.dados?.san?.atual}/{f.dados?.san?.max}</span>
+                    <span className="px-2 py-1 bg-orange-600/40 rounded-md text-orange-300">ESF {f.dados?.esf?.atual}/{f.dados?.esf?.max}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-                  👤 {f.dados?.profile?.jogador || "Jogador Desconhecido"}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  📖 {f.dados?.profile?.origem || "Sem origem"}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">
-                  ⚔️ {f.dados?.profile?.classe || "Sem classe"}
-                </div>
-                <div className="flex gap-2 text-xs font-medium">
-                  <span className="px-2 py-1 bg-red-600/40 rounded-md text-red-300">
-                    HP {f.dados?.hp?.atual}/{f.dados?.hp?.max}
-                  </span>
-                  <span className="px-2 py-1 bg-purple-600/40 rounded-md text-purple-300">
-                    SAN {f.dados?.san?.atual}/{f.dados?.san?.max}
-                  </span>
-                  <span className="px-2 py-1 bg-orange-600/40 rounded-md text-orange-300">
-                    ESF {f.dados?.esf?.atual}/{f.dados?.esf?.max}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-zinc-500 italic">Nenhuma ficha criada ainda...</p>
+          )}
+          <div className="flex justify-center">
+            <button onClick={criarFicha} className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-md hover:shadow-violet-500/30 transition-all">
+              ➕ Criar nova ficha
+            </button>
           </div>
-        ) : (
-          <p className="text-center text-zinc-500 italic">
-            Nenhuma ficha criada ainda...
-          </p>
-        )}
-{fichaParaDeletar && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
-      <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
-      <p className="text-zinc-300 mb-6">
-        Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
-      </p>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setFichaParaDeletar(null)}
-          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={() => {
-            deletarFicha(fichaParaDeletar);
-            setFichaParaDeletar(null);
-          }}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        </section>
 
-        <div className="flex justify-center">
-          <button
-            onClick={criarFicha}
-            className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 
-                       text-white font-semibold shadow-md hover:shadow-violet-500/30
-                       transition-all"
-          >
-            ➕ Criar nova ficha
-          </button>
-        </div>
+        {/* Campanhas */}
+        <section>
+          <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">📚 Campanhas</h1>
+          {campanhas.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {campanhas.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => setActiveCampanhaId(c.id)}
+                  className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
+                >
+                  <div className="absolute top-0 left-0 h-full w-1 bg-green-600 rounded-l-2xl" />
+                  <div className="text-2xl font-bold text-white mb-1 group-hover:text-green-300">
+                    {c.titulo}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">🎲 Mestre: Você</div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-400">👥 {c.jogadores?.length || 0} jogadores</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-zinc-500 italic">Nenhuma campanha criada ainda...</p>
+          )}
+          <div className="flex justify-center">
+            <button onClick={criarCampanha} className="mt-10 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-semibold shadow-md hover:shadow-green-500/30 transition-all">
+              ➕ Criar nova campanha
+            </button>
+          </div>
+        </section>
       </main>
     </div>
   );
