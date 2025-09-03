@@ -20,6 +20,9 @@ export default function App() {
   const [campanhas, setCampanhas] = useState([]);
   const [activeCampanhaId, setActiveCampanhaId] = useState(null);
 
+  // ----------- Página atual (navegação) -----------
+  const [currentPage, setCurrentPage] = useState("personagens");
+
   const API = "https://pressagios-login.onrender.com";
 
   // Carregar token ao iniciar
@@ -31,6 +34,13 @@ export default function App() {
       carregarCampanhas(token);
     }
   }, []);
+
+  // ----------- Navegação pelo Header -----------
+  const handleNavigate = (dest) => {
+    setActiveId(null);
+    setActiveCampanhaId(null);
+    setCurrentPage(dest);
+  };
 
   // ----------- Funções de autenticação -----------
   const handleChange = (e) => {
@@ -228,18 +238,6 @@ export default function App() {
     }
   };
 
-  // Navegação do Header
-  const handleNavigate = (dest) => {
-    if (dest === "personagens") {
-      setActiveId(null);
-      setActiveCampanhaId(null);
-    }
-    if (dest === "campanhas") {
-      setActiveId(null);
-      setActiveCampanhaId(null);
-    }
-  };
-
   // ----------- Renderização -----------
 
   // Login/Registro
@@ -348,81 +346,83 @@ export default function App() {
       </div>
 
       <main className="p-8 space-y-12">
-        {/* Fichas */}
-        <section>
-          <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">🎭 Personagens Registrados</h1>
-          {fichas.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {fichas.map((f) => (
-                <div
-                  key={f.id}
-                  onClick={() => setActiveId(f.id)}
-                  className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
-                >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFichaParaDeletar(f.id);
-                    }}
-                    className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-                    title="Deletar Ficha"
+        {currentPage === "personagens" && (
+          <section>
+            <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">🎭 Personagens Registrados</h1>
+            {fichas.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {fichas.map((f) => (
+                  <div
+                    key={f.id}
+                    onClick={() => setActiveId(f.id)}
+                    className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
                   >
-                    ❌
-                  </button>
-                  <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
-                  <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
-                    {f.dados?.profile?.nome || "Personagem Sem Nome"}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFichaParaDeletar(f.id);
+                      }}
+                      className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+                      title="Deletar Ficha"
+                    >
+                      ❌
+                    </button>
+                    <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
+                    <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
+                      {f.dados?.profile?.nome || "Personagem Sem Nome"}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">👤 {f.dados?.profile?.jogador || "Jogador Desconhecido"}</div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">📖 {f.dados?.profile?.origem || "Sem origem"}</div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">⚔️ {f.dados?.profile?.classe || "Sem classe"}</div>
+                    <div className="flex gap-2 text-xs font-medium">
+                      <span className="px-2 py-1 bg-red-600/40 rounded-md text-red-300">HP {f.dados?.hp?.atual}/{f.dados?.hp?.max}</span>
+                      <span className="px-2 py-1 bg-purple-600/40 rounded-md text-purple-300">SAN {f.dados?.san?.atual}/{f.dados?.san?.max}</span>
+                      <span className="px-2 py-1 bg-orange-600/40 rounded-md text-orange-300">ESF {f.dados?.esf?.atual}/{f.dados?.esf?.max}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">👤 {f.dados?.profile?.jogador || "Jogador Desconhecido"}</div>
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">📖 {f.dados?.profile?.origem || "Sem origem"}</div>
-                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">⚔️ {f.dados?.profile?.classe || "Sem classe"}</div>
-                  <div className="flex gap-2 text-xs font-medium">
-                    <span className="px-2 py-1 bg-red-600/40 rounded-md text-red-300">HP {f.dados?.hp?.atual}/{f.dados?.hp?.max}</span>
-                    <span className="px-2 py-1 bg-purple-600/40 rounded-md text-purple-300">SAN {f.dados?.san?.atual}/{f.dados?.san?.max}</span>
-                    <span className="px-2 py-1 bg-orange-600/40 rounded-md text-orange-300">ESF {f.dados?.esf?.atual}/{f.dados?.esf?.max}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-zinc-500 italic">Nenhuma ficha criada ainda...</p>
+            )}
+            <div className="flex justify-center">
+              <button onClick={criarFicha} className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-md hover:shadow-violet-500/30 transition-all">
+                ➕ Criar nova ficha
+              </button>
             </div>
-          ) : (
-            <p className="text-center text-zinc-500 italic">Nenhuma ficha criada ainda...</p>
-          )}
-          <div className="flex justify-center">
-            <button onClick={criarFicha} className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-md hover:shadow-violet-500/30 transition-all">
-              ➕ Criar nova ficha
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* Campanhas */}
-        <section>
-          <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">📚 Campanhas</h1>
-          {campanhas.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {campanhas.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => setActiveCampanhaId(c.id)}
-                  className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
-                >
-                  <div className="absolute top-0 left-0 h-full w-1 bg-green-600 rounded-l-2xl" />
-                  <div className="text-2xl font-bold text-white mb-1 group-hover:text-green-300">
-                    {c.titulo}
+        {currentPage === "campanhas" && (
+          <section>
+            <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">📚 Campanhas</h1>
+            {campanhas.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {campanhas.map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => setActiveCampanhaId(c.id)}
+                    className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all group"
+                  >
+                    <div className="absolute top-0 left-0 h-full w-1 bg-green-600 rounded-l-2xl" />
+                    <div className="text-2xl font-bold text-white mb-1 group-hover:text-green-300">
+                      {c.titulo}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">🎲 Mestre: Você</div>
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">👥 {c.jogadores?.length || 0} jogadores</div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">🎲 Mestre: Você</div>
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">👥 {c.jogadores?.length || 0} jogadores</div>
-                </div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-zinc-500 italic">Nenhuma campanha criada ainda...</p>
+            )}
+            <div className="flex justify-center">
+              <button onClick={criarCampanha} className="mt-10 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-semibold shadow-md hover:shadow-green-500/30 transition-all">
+                ➕ Criar nova campanha
+              </button>
             </div>
-          ) : (
-            <p className="text-center text-zinc-500 italic">Nenhuma campanha criada ainda...</p>
-          )}
-          <div className="flex justify-center">
-            <button onClick={criarCampanha} className="mt-10 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-semibold shadow-md hover:shadow-green-500/30 transition-all">
-              ➕ Criar nova campanha
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );
