@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import Header from "./Header";
 import CRISSheet from "./CRISSheet";
-import CampanhaSheet from "./CampanhaSheet";
-import CampanhaPublica from "./CampanhaPublica";
-import Login from "./Login";
+import Header from "./Header";
 
 export default function App() {
   // ----------- Estados de autenticação -----------
