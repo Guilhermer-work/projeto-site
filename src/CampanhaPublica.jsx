@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function CampanhaPublica() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [campanha, setCampanha] = useState(null);
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login"); // 🔹 redireciona para login se não estiver logado
+      return;
+    }
 
     fetch(`https://pressagios-login.onrender.com/campanhas/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -18,7 +23,7 @@ export default function CampanhaPublica() {
       })
       .then((data) => setCampanha(data))
       .catch((err) => setErro(err.message));
-  }, [id]);
+  }, [id, navigate]);
 
   if (erro) return <div className="p-6 text-red-400">{erro}</div>;
   if (!campanha) return <div className="p-6 text-zinc-400">Carregando campanha...</div>;
