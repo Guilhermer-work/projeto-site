@@ -11,9 +11,9 @@ export default function AuthForm({ onLogin, onRegister, loading }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isRegistering) {
-      onRegister(form, () => setIsRegistering(false));
+      onRegister(form.email, form.password, () => setIsRegistering(false));
     } else {
-      onLogin(form);
+      onLogin(form.email, form.password);
     }
   };
 
