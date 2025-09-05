@@ -5,6 +5,9 @@ import AuthForm from "./AuthForm";
 import FichaCard from "./FichaCard";
 import DeleteModal from "./DeleteModal";
 
+// URL do backend no Render
+const API_URL = "https://pressagios-login.onrender.com";
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [fichas, setFichas] = useState([]);
@@ -22,7 +25,7 @@ export default function App() {
 
   const carregarFichas = async (token) => {
     try {
-      const res = await fetch("/fichas", {
+      const res = await fetch(`${API_URL}/fichas`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -34,12 +37,12 @@ export default function App() {
     }
   };
 
-  const handleLogin = async (email, senha) => {
+  const handleLogin = async ({ email, password }) => {
     try {
-      const res = await fetch("/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -54,16 +57,17 @@ export default function App() {
     }
   };
 
-  const handleRegister = async (email, senha) => {
+  const handleRegister = async ({ email, password }, done) => {
     try {
-      const res = await fetch("/auth/register", {
+      const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (res.ok) {
         alert("Usuário registrado com sucesso!");
+        if (done) done();
       } else {
         alert(data.error || "Erro no registro");
       }
@@ -74,7 +78,7 @@ export default function App() {
 
   const criarFicha = async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch("/fichas", {
+    const res = await fetch(`${API_URL}/fichas`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ nome: "Novo Personagem", dados: {} }),
@@ -87,7 +91,7 @@ export default function App() {
 
   const atualizarFicha = async (id, novosDados) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`/fichas/${id}`, {
+    const res = await fetch(`${API_URL}/fichas/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(novosDados),
@@ -105,7 +109,7 @@ export default function App() {
   const deletarFicha = async () => {
     if (!fichaParaDeletar) return;
     const token = localStorage.getItem("token");
-    const res = await fetch(`/fichas/${fichaParaDeletar.id}`, {
+    const res = await fetch(`${API_URL}/fichas/${fichaParaDeletar.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
