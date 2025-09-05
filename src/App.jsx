@@ -1,25 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import CRISSheet from "./CRISSheet";
 import Header from "./Header";
+import AuthForm from "./AuthForm";
+import FichaCard from "./FichaCard";
+import DeleteModal from "./DeleteModal";
 
 export default function App() {
-  // ----------- Estados de autenticação -----------
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-
-  // ----------- Estados das fichas -----------
   const [fichas, setFichas] = useState([]);
-  const [activeId, setActiveId] = useState(null);
-
-  // ----------- Estado do modal de exclusão -----------
+  const [fichaSelecionada, setFichaSelecionada] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
 
-
-  const API = "https://pressagios-login.onrender.com";
-
-  // Carregar token ao iniciar
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -28,23 +20,29 @@ export default function App() {
     }
   }, []);
 
-  // ----------- Funções de autenticação -----------
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const carregarFichas = async (token) => {
+    try {
+      const res = await fetch("/fichas", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFichas(data);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar fichas", err);
+    }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleLogin = async (email, senha) => {
     try {
-      const res = await fetch(`${API}/login`, {
+      const res = await fetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email, senha }),
       });
-
       const data = await res.json();
-      if (data.token) {
+      if (res.ok) {
         localStorage.setItem("token", data.token);
         setIsLoggedIn(true);
         carregarFichas(data.token);
@@ -52,363 +50,124 @@ export default function App() {
         alert(data.error || "Erro no login");
       }
     } catch {
-      alert("Erro de conexão com servidor");
-    } finally {
-      setLoading(false);
+      alert("Falha ao conectar ao servidor");
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleRegister = async (email, senha) => {
     try {
-      const res = await fetch(`${API}/register`, {
+      const res = await fetch("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email, senha }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        alert("✅ Conta criada! Agora faça login.");
-        setIsRegistering(false);
-        setForm({ email: "", password: "" });
+      if (res.ok) {
+        alert("Usuário registrado com sucesso!");
       } else {
-        alert(data.error || "Erro ao registrar");
+        alert(data.error || "Erro no registro");
       }
     } catch {
-      alert("Erro de conexão com servidor");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setFichas([]);
-  };
-
-  // ----------- Funções das fichas -----------
-  const carregarFichas = async (token) => {
-    try {
-      const res = await fetch(`${API}/fichas`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setFichas(data);
-      }
-    } catch {
-      console.error("Erro ao carregar fichas");
+      alert("Falha ao conectar ao servidor");
     }
   };
 
   const criarFicha = async () => {
     const token = localStorage.getItem("token");
-    const nova = {
-      nome: "Novo Personagem",
-      dados: {
-        profile: { nome: "", origem: "", jogador: "", classe: "" },
-        attrs: { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 },
-        hp: { atual: 10, max: 10 },
-        san: { atual: 10, max: 10 },
-        esf: { atual: 10, max: 10 },
-        ataques: [],
-      },
-    };
-
-    try {
-      const res = await fetch(`${API}/fichas`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(nova),
-      });
-
-      const data = await res.json();
-      setFichas([...fichas, { id: data.id, nome: nova.nome, ...nova }]);
-      setActiveId(data.id);
-    } catch {
-      alert("Erro ao criar ficha");
+    const res = await fetch("/fichas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ nome: "Novo Personagem", dados: {} }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setFichas([...fichas, data]);
     }
   };
 
   const atualizarFicha = async (id, novosDados) => {
     const token = localStorage.getItem("token");
-
-    const fichaAtual = fichas.find((f) => f.id === id);
-    const fichaFinal = {
-      ...fichaAtual.dados,
-      ...novosDados,
-    };
-
-
-    try {
-      const res = await fetch(`${API}/fichas/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          nome: fichaFinal.profile?.nome || "Sem nome",
-          dados: fichaFinal,
-        }),
-      });
-
-      const result = await res.json();
-
-
-      setFichas((prev) =>
-        prev.map((f) => 
-          f.id === id ? { ...f, nome: fichaFinal.profile?.nome, dados: fichaFinal } : f
-        )
-      );
-    } catch (err) {
-      console.error("❌ Erro ao atualizar ficha", err);
-      alert("Erro ao atualizar ficha");
+    const res = await fetch(`/fichas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(novosDados),
+    });
+    if (res.ok) {
+      setFichas(fichas.map(f => (f.id === id ? { ...f, ...novosDados } : f)));
     }
   };
 
-  const deletarFicha = async (id) => {
+  const confirmarDelete = (ficha) => {
+    setFichaParaDeletar(ficha);
+    setShowDeleteModal(true);
+  };
+
+  const deletarFicha = async () => {
+    if (!fichaParaDeletar) return;
     const token = localStorage.getItem("token");
-
-    try {
-        await fetch(`${API}/fichas/${id}`, {
-            method: "DELETE",
-            headers: {Authorization: `Bearer ${token}`},
-        });
-
-        setFichas((prev) => prev.filter((f) => f.id !== id));
-
-        if (activeId === id) setActiveId(null);
-
-    } catch {
-        alert("Erro ao deletar ficha");
+    const res = await fetch(`/fichas/${fichaParaDeletar.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setFichas(fichas.filter(f => f.id !== fichaParaDeletar.id));
+      if (fichaSelecionada?.id === fichaParaDeletar.id) setFichaSelecionada(null);
     }
+    setShowDeleteModal(false);
+    setFichaParaDeletar(null);
   };
 
-  // Navegação do Header
-  const handleNavigate = (dest) => {
-    if (dest === "personagens") setActiveId(null);
-    if (dest === "campanhas") alert("🚧 Em breve: Campanhas");
+  const logout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setFichas([]);
+    setFichaSelecionada(null);
   };
 
-  // ----------- Renderização -----------
-
-  // Login/Registro
   if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-950 to-black text-white">
-        <div className="w-96 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-2xl shadow-lg border border-zinc-700">
-          <h2 className="text-2xl font-bold mb-6 text-center text-violet-400">
-            {isRegistering ? "Criar Conta" : "Entrar"}
-          </h2>
-
-          <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Senha"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full ${
-                loading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-violet-600 hover:bg-violet-500"
-              } text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-violet-500/30 transition-all`}
-            >
-              {loading
-                ? "Carregando..."
-                : isRegistering
-                ? "Registrar"
-                : "Entrar"}
-            </button>
-          </form>
-
-          <p className="text-center mt-6 text-sm text-zinc-400">
-            {isRegistering ? (
-              <>
-                Já tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(false)}
-                >
-                  Fazer login
-                </button>
-              </>
-            ) : (
-              <>
-                Não tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(true)}
-                >
-                  Criar conta
-                </button>
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-    );
+    return <AuthForm onLogin={handleLogin} onRegister={handleRegister} />;
   }
 
-  // Ficha ativa
-  if (activeId) {
-    const ficha = fichas.find((f) => f.id === activeId);
-    const dados = ficha?.dados || ficha;
-    return (
-      <>
-        <Header onNavigate={handleNavigate} />
-        <div className="flex justify-end p-2">
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg"
-          >
-            Sair
-          </button>
-        </div>
-        <CRISSheet
-          ficha={dados}
-          onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
-          onVoltar={() => setActiveId(null)}
-        />
-      </>
-    );
-  }
-
-  // Lista de fichas
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white">
-      <Header onNavigate={handleNavigate} />
-      <div className="flex justify-end p-4">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg"
-        >
-          Sair
-        </button>
-      </div>
-
-      <main className="p-8">
-        <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">
-          🎭 Personagens Registrados
-        </h1>
-
-        {fichas.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {fichas.map((f) => (
-
-              <div
-                key={f.id}
-                onClick={() => setActiveId(f.id)}
-                className="cursor-pointer relative p-6 rounded-2xl
-                           bg-gradient-to-br from-zinc-900 to-zinc-800
-                           border border-zinc-700 hover:border-violet-500
-                           hover:shadow-lg hover:shadow-violet-500/20
-                           transition-all group"
-              >
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setFichaParaDeletar(f.id);
-                   }}
-                   className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-                   title="Deletar Ficha"
-                >
-                    ❌
-                </button>
-                <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
-                <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
-                  {f.dados?.profile?.nome || "Personagem Sem Nome"}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-                  👤 {f.dados?.profile?.jogador || "Jogador Desconhecido"}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  📖 {f.dados?.profile?.origem || "Sem origem"}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">
-                  ⚔️ {f.dados?.profile?.classe || "Sem classe"}
-                </div>
-                <div className="flex gap-2 text-xs font-medium">
-                  <span className="px-2 py-1 bg-red-600/40 rounded-md text-red-300">
-                    HP {f.dados?.hp?.atual}/{f.dados?.hp?.max}
-                  </span>
-                  <span className="px-2 py-1 bg-purple-600/40 rounded-md text-purple-300">
-                    SAN {f.dados?.san?.atual}/{f.dados?.san?.max}
-                  </span>
-                  <span className="px-2 py-1 bg-orange-600/40 rounded-md text-orange-300">
-                    ESF {f.dados?.esf?.atual}/{f.dados?.esf?.max}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-zinc-500 italic">
-            Nenhuma ficha criada ainda...
-          </p>
-        )}
-{fichaParaDeletar && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
-      <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
-      <p className="text-zinc-300 mb-6">
-        Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
-      </p>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setFichaParaDeletar(null)}
-          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={() => {
-            deletarFicha(fichaParaDeletar);
-            setFichaParaDeletar(null);
-          }}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-        <div className="flex justify-center">
+    <div className="flex h-screen flex-col">
+      <Header onLogout={logout} />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-64 border-r border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
           <button
             onClick={criarFicha}
-            className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 
-                       text-white font-semibold shadow-md hover:shadow-violet-500/30
-                       transition-all"
+            className="mb-4 w-full rounded bg-green-600 px-4 py-2 text-white hover:bg-green-500"
           >
-            ➕ Criar nova ficha
+            + Nova Ficha
           </button>
+          {fichas.map((f) => (
+            <FichaCard
+              key={f.id}
+              ficha={f}
+              onSelect={() => setFichaSelecionada(f)}
+              onDelete={() => confirmarDelete(f)}
+            />
+          ))}
         </div>
-      </main>
+        <div className="flex-1 overflow-y-auto">
+          {fichaSelecionada ? (
+            <CRISSheet ficha={fichaSelecionada} onUpdate={atualizarFicha} />
+          ) : (
+            <div className="flex h-full items-center justify-center text-zinc-400">
+              Selecione ou crie uma ficha
+            </div>
+          )}
+        </div>
+      </div>
+
+      <DeleteModal
+        open={showDeleteModal}
+        title="Excluir Ficha"
+        message={`Tem certeza que deseja excluir "${fichaParaDeletar?.nome}"?`}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={deletarFicha}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }
