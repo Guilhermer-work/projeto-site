@@ -22,20 +22,28 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     }
   };
 
-  const criarCampanha = async () => {
-    if (!novaCampanha.nome) return alert("Digite um nome para a campanha");
-    try {
-      const res = await apiFetch("/campanhas", {
-        method: "POST",
-        body: JSON.stringify(novaCampanha),
-      });
-      const data = await res.json();
-      setCampanhas([...campanhas, data]);
-      setNovaCampanha({ nome: "", descricao: "" });
-    } catch {
-      alert("Erro ao criar campanha");
+const criarCampanha = async () => {
+  if (!novaCampanha.nome.trim()) return alert("Digite um nome para a campanha");
+  try {
+    const res = await apiFetch("/campanhas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }, // força garantir
+      body: JSON.stringify({
+        nome: novaCampanha.nome.trim(),
+        descricao: novaCampanha.descricao || "",
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Erro ao criar campanha");
     }
-  };
+    const data = await res.json();
+    setCampanhas([...campanhas, data]);
+    setNovaCampanha({ nome: "", descricao: "" });
+  } catch (e) {
+    alert(e.message);
+  }
+};
 
   const carregarFichasCampanha = async (campanhaId) => {
     try {
