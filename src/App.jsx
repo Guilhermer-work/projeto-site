@@ -16,15 +16,66 @@ export default function App() {
   // ----------- Estado do modal de exclusão -----------
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
 
-
   const API = "https://pressagios-login.onrender.com";
+
+  // ----------- Funções auxiliares -----------
+  async function refreshAccessToken() {
+    try {
+      const res = await fetch(`${API}/refresh`, {
+        method: "POST",
+        credentials: "include", // envia cookies
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      localStorage.setItem("token", data.accessToken);
+      return data.accessToken;
+    } catch {
+      return null;
+    }
+  }
+
+  async function apiFetch(url, options = {}) {
+    let token = localStorage.getItem("token");
+
+    let res = await fetch(`${API}${url}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // necessário pro refresh token
+    });
+
+    if (res.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) {
+        setIsLoggedIn(false);
+        setFichas([]);
+        localStorage.removeItem("token");
+        throw new Error("Sessão expirada");
+      }
+      // refaz a requisição
+      res = await fetch(`${API}${url}`, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${newToken}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+    }
+
+    return res;
+  }
 
   // Carregar token ao iniciar
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
-      carregarFichas(token);
+      carregarFichas();
     }
   }, []);
 
@@ -41,13 +92,14 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include",
       });
 
       const data = await res.json();
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      if (data.accessToken) {
+        localStorage.setItem("token", data.accessToken);
         setIsLoggedIn(true);
-        carregarFichas(data.token);
+        carregarFichas();
       } else {
         alert(data.error || "Erro no login");
       }
@@ -66,13 +118,14 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include",
       });
 
       const data = await res.json();
-      if (data.success) {
-        alert("✅ Conta criada! Agora faça login.");
-        setIsRegistering(false);
-        setForm({ email: "", password: "" });
+      if (data.accessToken) {
+        localStorage.setItem("token", data.accessToken);
+        setIsLoggedIn(true);
+        carregarFichas();
       } else {
         alert(data.error || "Erro ao registrar");
       }
@@ -83,29 +136,32 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {}
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     setFichas([]);
   };
 
   // ----------- Funções das fichas -----------
-  const carregarFichas = async (token) => {
+  const carregarFichas = async () => {
     try {
-      const res = await fetch(`${API}/fichas`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch("/fichas");
       const data = await res.json();
       if (Array.isArray(data)) {
         setFichas(data);
       }
-    } catch {
-      console.error("Erro ao carregar fichas");
+    } catch (err) {
+      console.error("Erro ao carregar fichas", err);
     }
   };
 
   const criarFicha = async () => {
-    const token = localStorage.getItem("token");
     const nova = {
       nome: "Novo Personagem",
       dados: {
@@ -119,12 +175,8 @@ export default function App() {
     };
 
     try {
-      const res = await fetch(`${API}/fichas`, {
+      const res = await apiFetch("/fichas", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(nova),
       });
 
@@ -137,33 +189,25 @@ export default function App() {
   };
 
   const atualizarFicha = async (id, novosDados) => {
-    const token = localStorage.getItem("token");
-
     const fichaAtual = fichas.find((f) => f.id === id);
     const fichaFinal = {
       ...fichaAtual.dados,
       ...novosDados,
     };
 
-
     try {
-      const res = await fetch(`${API}/fichas/${id}`, {
+      const res = await apiFetch(`/fichas/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           nome: fichaFinal.profile?.nome || "Sem nome",
           dados: fichaFinal,
         }),
       });
 
-      const result = await res.json();
-
+      await res.json();
 
       setFichas((prev) =>
-        prev.map((f) => 
+        prev.map((f) =>
           f.id === id ? { ...f, nome: fichaFinal.profile?.nome, dados: fichaFinal } : f
         )
       );
@@ -174,20 +218,12 @@ export default function App() {
   };
 
   const deletarFicha = async (id) => {
-    const token = localStorage.getItem("token");
-
     try {
-        await fetch(`${API}/fichas/${id}`, {
-            method: "DELETE",
-            headers: {Authorization: `Bearer ${token}`},
-        });
-
-        setFichas((prev) => prev.filter((f) => f.id !== id));
-
-        if (activeId === id) setActiveId(null);
-
+      await apiFetch(`/fichas/${id}`, { method: "DELETE" });
+      setFichas((prev) => prev.filter((f) => f.id !== id));
+      if (activeId === id) setActiveId(null);
     } catch {
-        alert("Erro ao deletar ficha");
+      alert("Erro ao deletar ficha");
     }
   };
 
@@ -318,7 +354,6 @@ export default function App() {
         {fichas.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {fichas.map((f) => (
-
               <div
                 key={f.id}
                 onClick={() => setActiveId(f.id)}
@@ -329,14 +364,14 @@ export default function App() {
                            transition-all group"
               >
                 <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setFichaParaDeletar(f.id);
-                   }}
-                   className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-                   title="Deletar Ficha"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFichaParaDeletar(f.id);
+                  }}
+                  className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+                  title="Deletar Ficha"
                 >
-                    ❌
+                  ❌
                 </button>
                 <div className="absolute top-0 left-0 h-full w-1 bg-violet-600 rounded-l-2xl" />
                 <div className="text-2xl font-bold text-white mb-1 group-hover:text-violet-300">
@@ -370,33 +405,33 @@ export default function App() {
             Nenhuma ficha criada ainda...
           </p>
         )}
-{fichaParaDeletar && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
-      <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
-      <p className="text-zinc-300 mb-6">
-        Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
-      </p>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setFichaParaDeletar(null)}
-          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={() => {
-            deletarFicha(fichaParaDeletar);
-            setFichaParaDeletar(null);
-          }}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        {fichaParaDeletar && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+              <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
+              <p className="text-zinc-300 mb-6">
+                Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={() => setFichaParaDeletar(null)}
+                  className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    deletarFicha(fichaParaDeletar);
+                    setFichaParaDeletar(null);
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-center">
           <button
