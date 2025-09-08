@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CRISSheet from "./CRISSheet";
 import Header from "./Header";
+import Campanhas from "./Campanhas";
 
 export default function App() {
   // ----------- Estados de autenticação -----------
@@ -12,6 +13,9 @@ export default function App() {
   // ----------- Estados das fichas -----------
   const [fichas, setFichas] = useState([]);
   const [activeId, setActiveId] = useState(null);
+
+  // ----------- Estados das campanhas -----------
+  const [view, setView] = useState("personagens"); // personagens | campanhas
 
   // ----------- Estado do modal de exclusão -----------
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
@@ -55,7 +59,6 @@ export default function App() {
         localStorage.removeItem("token");
         throw new Error("Sessão expirada");
       }
-      // refaz a requisição
       res = await fetch(`${API}${url}`, {
         ...options,
         headers: {
@@ -229,8 +232,8 @@ export default function App() {
 
   // Navegação do Header
   const handleNavigate = (dest) => {
-    if (dest === "personagens") setActiveId(null);
-    if (dest === "campanhas") alert("🚧 Em breve: Campanhas");
+    if (dest === "personagens") setView("personagens");
+    if (dest === "campanhas") setView("campanhas");
   };
 
   // ----------- Renderização -----------
@@ -251,8 +254,7 @@ export default function App() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
             <input
               type="password"
@@ -260,8 +262,7 @@ export default function App() {
               placeholder="Senha"
               value={form.password}
               onChange={handleChange}
-              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
 
             <button
@@ -310,7 +311,7 @@ export default function App() {
   }
 
   // Ficha ativa
-  if (activeId) {
+  if (activeId && view === "personagens") {
     const ficha = fichas.find((f) => f.id === activeId);
     const dados = ficha?.dados || ficha;
     return (
@@ -329,6 +330,24 @@ export default function App() {
           onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
           onVoltar={() => setActiveId(null)}
         />
+      </>
+    );
+  }
+
+  // Tela de campanhas
+  if (view === "campanhas") {
+    return (
+      <>
+        <Header onNavigate={handleNavigate} />
+        <div className="flex justify-end p-2">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg"
+          >
+            Sair
+          </button>
+        </div>
+        <Campanhas apiFetch={apiFetch} fichas={fichas} onAbrirFicha={setActiveId} />
       </>
     );
   }
@@ -357,11 +376,7 @@ export default function App() {
               <div
                 key={f.id}
                 onClick={() => setActiveId(f.id)}
-                className="cursor-pointer relative p-6 rounded-2xl
-                           bg-gradient-to-br from-zinc-900 to-zinc-800
-                           border border-zinc-700 hover:border-violet-500
-                           hover:shadow-lg hover:shadow-violet-500/20
-                           transition-all group"
+                className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
               >
                 <button
                   onClick={(e) => {
