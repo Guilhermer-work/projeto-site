@@ -57,7 +57,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     try {
       await apiFetch(`/campanhas/${campanhaAtiva.id}/add-ficha`, {
         method: "POST",
-        body: JSON.stringify({ fichaId: fichaSelecionada }),
+        body: JSON.stringify({ fichaId: Number(fichaSelecionada) }),
       });
       setFichaSelecionada("");
       carregarFichasCampanha(campanhaAtiva.id);
