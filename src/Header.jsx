@@ -23,6 +23,12 @@ export default function Header({ onNavigate }) {
           >
             Campanhas
           </button>
+          <button
+            className="hover:text-white"
+            onClick={() => onNavigate("perfil")}
+          >
+            Perfil
+          </button>
         </nav>
       </div>
     </header>
