@@ -2,32 +2,24 @@ import React, { useState, useEffect } from "react";
 import CRISSheet from "./CRISSheet";
 import Header from "./Header";
 import Campanhas from "./Campanhas";
+import Perfil from "./Perfil";
+import LoginPage from "./LoginPage";
 
 export default function App() {
-  // ----------- Estados de autenticação -----------
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-
-  // ----------- Estados das fichas -----------
+  const [loadingLogin, setLoadingLogin] = useState(true);
   const [fichas, setFichas] = useState([]);
   const [activeId, setActiveId] = useState(null);
-
-  // ----------- Estados das campanhas -----------
-  const [view, setView] = useState("personagens"); // personagens | campanhas
-
-  // ----------- Estado do modal de exclusão -----------
+  const [view, setView] = useState("personagens");
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
 
   const API = "https://pressagios-login.onrender.com";
 
-  // ----------- Funções auxiliares -----------
   async function refreshAccessToken() {
     try {
       const res = await fetch(`${API}/refresh`, {
         method: "POST",
-        credentials: "include", // envia cookies
+        credentials: "include",
       });
       if (!res.ok) return null;
       const data = await res.json();
@@ -40,7 +32,6 @@ export default function App() {
 
   async function apiFetch(url, options = {}) {
     let token = localStorage.getItem("token");
-
     let res = await fetch(`${API}${url}`, {
       ...options,
       headers: {
@@ -48,9 +39,8 @@ export default function App() {
         Authorization: token ? `Bearer ${token}` : "",
         "Content-Type": "application/json",
       },
-      credentials: "include", // necessário pro refresh token
+      credentials: "include",
     });
-
     if (res.status === 401) {
       const newToken = await refreshAccessToken();
       if (!newToken) {
@@ -69,89 +59,18 @@ export default function App() {
         credentials: "include",
       });
     }
-
     return res;
   }
 
-  // Carregar token ao iniciar
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
       carregarFichas();
     }
+    setLoadingLogin(false);
   }, []);
 
-  // ----------- Funções de autenticação -----------
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-        setIsLoggedIn(true);
-        carregarFichas();
-      } else {
-        alert(data.error || "Erro no login");
-      }
-    } catch {
-      alert("Erro de conexão com servidor");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-        setIsLoggedIn(true);
-        carregarFichas();
-      } else {
-        alert(data.error || "Erro ao registrar");
-      }
-    } catch {
-      alert("Erro de conexão com servidor");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API}/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {}
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setFichas([]);
-  };
-
-  // ----------- Funções das fichas -----------
   const carregarFichas = async () => {
     try {
       const res = await apiFetch("/fichas");
@@ -176,13 +95,11 @@ export default function App() {
         ataques: [],
       },
     };
-
     try {
       const res = await apiFetch("/fichas", {
         method: "POST",
         body: JSON.stringify(nova),
       });
-
       const data = await res.json();
       setFichas([...fichas, { id: data.id, nome: nova.nome, ...nova }]);
       setActiveId(data.id);
@@ -197,25 +114,20 @@ export default function App() {
       ...fichaAtual.dados,
       ...novosDados,
     };
-
     try {
-      const res = await apiFetch(`/fichas/${id}`, {
+      await apiFetch(`/fichas/${id}`, {
         method: "PUT",
         body: JSON.stringify({
           nome: fichaFinal.profile?.nome || "Sem nome",
           dados: fichaFinal,
         }),
       });
-
-      await res.json();
-
       setFichas((prev) =>
         prev.map((f) =>
           f.id === id ? { ...f, nome: fichaFinal.profile?.nome, dados: fichaFinal } : f
         )
       );
     } catch (err) {
-      console.error("❌ Erro ao atualizar ficha", err);
       alert("Erro ao atualizar ficha");
     }
   };
@@ -230,87 +142,33 @@ export default function App() {
     }
   };
 
-  // Navegação do Header
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {}
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setFichas([]);
+  };
+
   const handleNavigate = (dest) => {
     if (dest === "personagens") setView("personagens");
     if (dest === "campanhas") setView("campanhas");
+    if (dest === "perfil") setView("perfil");
   };
 
-  // ----------- Renderização -----------
+  if (loadingLogin) return null;
 
-  // Login/Registro
   if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-950 to-black text-white">
-        <div className="w-96 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-2xl shadow-lg border border-zinc-700">
-          <h2 className="text-2xl font-bold mb-6 text-center text-violet-400">
-            {isRegistering ? "Criar Conta" : "Entrar"}
-          </h2>
-
-          <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full p-3 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Senha"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full p-3 mb-6 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full ${
-                loading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-violet-600 hover:bg-violet-500"
-              } text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-violet-500/30 transition-all`}
-            >
-              {loading
-                ? "Carregando..."
-                : isRegistering
-                ? "Registrar"
-                : "Entrar"}
-            </button>
-          </form>
-
-          <p className="text-center mt-6 text-sm text-zinc-400">
-            {isRegistering ? (
-              <>
-                Já tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(false)}
-                >
-                  Fazer login
-                </button>
-              </>
-            ) : (
-              <>
-                Não tem conta?{" "}
-                <button
-                  className="text-violet-400 hover:underline"
-                  onClick={() => setIsRegistering(true)}
-                >
-                  Criar conta
-                </button>
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-    );
+    return <LoginPage onLogin={() => {
+      setIsLoggedIn(true);
+      carregarFichas();
+    }} />;
   }
 
-  // Ficha ativa
   if (activeId && view === "personagens") {
     const ficha = fichas.find((f) => f.id === activeId);
     const dados = ficha?.dados || ficha;
@@ -334,7 +192,6 @@ export default function App() {
     );
   }
 
-  // Tela de campanhas
   if (view === "campanhas") {
     return (
       <>
@@ -352,7 +209,23 @@ export default function App() {
     );
   }
 
-  // Lista de fichas
+  if (view === "perfil") {
+    return (
+      <>
+        <Header onNavigate={handleNavigate} />
+        <div className="flex justify-end p-2">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg"
+          >
+            Sair
+          </button>
+        </div>
+        <Perfil apiFetch={apiFetch} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white">
       <Header onNavigate={handleNavigate} />
@@ -420,6 +293,7 @@ export default function App() {
             Nenhuma ficha criada ainda...
           </p>
         )}
+
         {fichaParaDeletar && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
