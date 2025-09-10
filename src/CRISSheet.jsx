@@ -357,13 +357,8 @@ function Roller({ onRoll }) {
 export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
-  const [attrs, setAttrs] = useState({
-    FOR: 0,
-    AGI: 0,
-    INT: 0,
-    PRE: 0,
-    VIG: 0,
-  });
+  const attrs = ficha?.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
+
   const hp = ficha?.hp ?? { atual: 10, max: 10 };
   const san = ficha?.san ?? { atual: 10, max: 10 };
   const esf = ficha?.esf ?? { atual: 10, max: 10 };
@@ -615,16 +610,16 @@ function rollAttack(a) {
                     onChange={(e) => {
                       const raw = e.target.value;
                       if (raw === "" || raw === "-") {
-                        setAttrs((prev) => ({ ...prev, [k]: raw }));
+                        updateAttr(k, raw);
                         return;
                       }
                     if (/^-?\d+$/.test(raw)) {
-                      setAttrs((prev) => ({ ...prev, [k]: Number(raw) }));
+                      updateAttr(k, Number(raw));
                       }
                     }}
                     onBlur={(e) => {
                       if (isNaN(Number(e.target.value))) {
-                        setAttrs((prev) => ({ ...prev, [k]: 0 }));
+                        updateAttr(k, 0);
                       }
                     }}
                     className="w-full text-center bg-transparent text-white appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
