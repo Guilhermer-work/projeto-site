@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
   const [campanhas, setCampanhas] = useState([]);
@@ -6,9 +7,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
   const [campanhaAtiva, setCampanhaAtiva] = useState(null);
   const [fichasCampanha, setFichasCampanha] = useState([]);
   const [fichaSelecionada, setFichaSelecionada] = useState("");
-  const [convidarEmail, setConvidarEmail] = useState("");
-  const [convidados, setConvidados] = useState([]);
-  const [config, setConfig] = useState({ visibilidade_fichas: "todos", edicao_fichas: "criador" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     carregarCampanhas();
@@ -35,6 +34,10 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
           descricao: novaCampanha.descricao || "",
         }),
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erro ao criar campanha");
+      }
       const data = await res.json();
       setCampanhas([...campanhas, data]);
       setNovaCampanha({ nome: "", descricao: "" });
@@ -53,24 +56,9 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     }
   };
 
-  const carregarConvidados = async (campanhaId) => {
-    try {
-      const res = await apiFetch(`/campanhas/${campanhaId}/convidados`);
-      const data = await res.json();
-      setConvidados(data);
-    } catch {
-      alert("Erro ao carregar convidados");
-    }
-  };
-
-  const abrirCampanha = async (campanha) => {
+  const abrirCampanha = (campanha) => {
     setCampanhaAtiva(campanha);
-    setConfig({
-      visibilidade_fichas: campanha.visibilidade_fichas || "todos",
-      edicao_fichas: campanha.edicao_fichas || "criador",
-    });
     carregarFichasCampanha(campanha.id);
-    carregarConvidados(campanha.id);
   };
 
   const adicionarFicha = async () => {
@@ -78,46 +66,24 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     try {
       await apiFetch(`/campanhas/${campanhaAtiva.id}/add-ficha`, {
         method: "POST",
-        body: JSON.stringify({ fichaId: Number(fichaSelecionada) })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fichaId: Number(fichaSelecionada) }),
       });
       setFichaSelecionada("");
       carregarFichasCampanha(campanhaAtiva.id);
-    } catch {
+    } catch (err) {
       alert("Erro ao adicionar ficha na campanha");
     }
   };
 
-  const convidarUsuario = async () => {
-    if (!convidarEmail.trim()) return;
-    try {
-      await apiFetch(`/campanhas/${campanhaAtiva.id}/convidar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: convidarEmail.trim() }),
-      });
-      setConvidarEmail("");
-      carregarConvidados(campanhaAtiva.id);
-    } catch {
-      alert("Erro ao convidar");
-    }
-  };
-
-  const salvarConfiguracoes = async () => {
-    try {
-      await apiFetch(`/campanhas/${campanhaAtiva.id}/configuracoes`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      alert("Configurações salvas!");
-    } catch {
-      alert("Erro ao salvar configurações");
-    }
+  const copiarLinkConvite = () => {
+    if (!campanhaAtiva?.codigo) return alert("Esta campanha não tem código de convite");
+    const link = `${window.location.origin}/campanha/${campanhaAtiva.codigo}`;
+    navigator.clipboard.writeText(link);
+    alert("Link de convite copiado!");
   };
 
   if (campanhaAtiva) {
-    const linkConvite = `https://pressagios.onrender.com/campanha/${campanhaAtiva.codigo}`;
-
     return (
       <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white p-8">
         <button
@@ -127,117 +93,57 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
           ← Voltar para lista de campanhas
         </button>
 
-        <h1 className="text-3xl font-bold mb-4">📖 {campanhaAtiva.nome}</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-bold">📖 {campanhaAtiva.nome}</h1>
+          <button
+            onClick={copiarLinkConvite}
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
+          >
+            📋 Copiar link de convite
+          </button>
+        </div>
         <p className="text-zinc-400 mb-6">{campanhaAtiva.descricao}</p>
 
-        <div className="mb-8">
-          <label className="block text-sm text-zinc-400 mb-1">🔗 Link de convite:</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={linkConvite}
-              readOnly
-              className="flex-1 p-2 bg-zinc-800 border border-zinc-600 rounded-lg text-sm text-white"
-            />
-            <button
-              onClick={() => navigator.clipboard.writeText(linkConvite)}
-              className="px-3 py-2 text-sm bg-violet-600 hover:bg-violet-500 rounded-lg"
-            >
-              Copiar
-            </button>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">Fichas da Campanha</h2>
+        <h2 className="text-2xl font-semibold mb-4">Fichas da Campanha</h2>
+        {fichasCampanha.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fichasCampanha.map((f) => (
               <div
                 key={f.id}
                 onClick={() => onAbrirFicha(f.id)}
-                className="cursor-pointer p-4 rounded-xl bg-zinc-800 border border-zinc-600 mb-2"
+                className="cursor-pointer p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
               >
-                <strong>{f.dados?.profile?.nome || "Sem nome"}</strong> — 👤 {f.dados?.profile?.jogador || "Desconhecido"}
+                <div className="text-lg font-bold mb-2">{f.dados?.profile?.nome || "Sem Nome"}</div>
+                <div className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador || "Desconhecido"}</div>
+                <div className="text-sm text-zinc-400">⚔️ {f.dados?.profile?.classe || "Sem classe"}</div>
               </div>
             ))}
-
-            <div className="mt-4">
-              <h3 className="text-lg font-medium mb-2">➕ Adicionar Ficha</h3>
-              <div className="flex gap-2">
-                <select
-                  value={fichaSelecionada}
-                  onChange={(e) => setFichaSelecionada(e.target.value)}
-                  className="flex-1 p-2 bg-zinc-800 border border-zinc-600 rounded-lg"
-                >
-                  <option value="">Selecione uma ficha</option>
-                  {fichas.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.dados?.profile?.nome || "Sem nome"}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={adicionarFicha}
-                  className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
-                >
-                  Adicionar
-                </button>
-              </div>
-            </div>
           </div>
+        ) : (
+          <p className="text-zinc-500 italic">Nenhuma ficha adicionada ainda...</p>
+        )}
 
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">⚙️ Configurações da Campanha</h2>
-
-            <label className="block mb-2 text-sm">Quem pode ver fichas:</label>
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-2">Adicionar Ficha</h3>
+          <div className="flex gap-2">
             <select
-              value={config.visibilidade_fichas}
-              onChange={(e) => setConfig({ ...config, visibilidade_fichas: e.target.value })}
-              className="w-full p-2 mb-4 bg-zinc-800 border border-zinc-600 rounded-lg"
+              value={fichaSelecionada}
+              onChange={(e) => setFichaSelecionada(e.target.value)}
+              className="flex-1 p-2 bg-zinc-900 border border-zinc-700 rounded-lg"
             >
-              <option value="todos">Todos os jogadores</option>
-              <option value="mestre">Apenas o mestre</option>
+              <option value="">Selecione uma ficha</option>
+              {fichas.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.dados?.profile?.nome || "Sem Nome"}
+                </option>
+              ))}
             </select>
-
-            <label className="block mb-2 text-sm">Quem pode editar fichas:</label>
-            <select
-              value={config.edicao_fichas}
-              onChange={(e) => setConfig({ ...config, edicao_fichas: e.target.value })}
-              className="w-full p-2 mb-4 bg-zinc-800 border border-zinc-600 rounded-lg"
-            >
-              <option value="criador">Somente quem criou</option>
-              <option value="mestre">Mestre pode editar tudo</option>
-            </select>
-
             <button
-              onClick={salvarConfiguracoes}
-              className="w-full mb-6 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg"
+              onClick={adicionarFicha}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
             >
-              Salvar Configurações
+              ➕ Adicionar
             </button>
-
-            <h2 className="text-2xl font-semibold mb-2">🙋 Jogadores Convidados</h2>
-            {convidados.map((u) => (
-              <div key={u.id} className="text-sm text-zinc-300">
-                • {u.username || u.email}
-              </div>
-            ))}
-
-            <div className="mt-4">
-              <input
-                type="email"
-                placeholder="Email do jogador"
-                value={convidarEmail}
-                onChange={(e) => setConvidarEmail(e.target.value)}
-                className="w-full p-2 mb-2 bg-zinc-800 border border-zinc-600 rounded-lg"
-              />
-              <button
-                onClick={convidarUsuario}
-                className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
-              >
-                Convidar jogador
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -254,7 +160,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
             <div
               key={c.id}
               onClick={() => abrirCampanha(c)}
-              className="cursor-pointer p-6 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
+              className="cursor-pointer p-6 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
             >
               <div className="text-xl font-bold mb-2">{c.nome}</div>
               <div className="text-sm text-zinc-400">{c.descricao || "Sem descrição"}</div>
