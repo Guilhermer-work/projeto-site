@@ -112,10 +112,23 @@ export default function App() {
 
   const atualizarFicha = async (id, novosDados) => {
     const fichaAtual = fichas.find((f) => f.id === id);
-    const fichaFinal = {
-      ...fichaAtual.dados,
-      ...novosDados,
-    };
+    const mergeDeep = (target, source) => {
+  const output = { ...target };
+  for (const key of Object.keys(source)) {
+    if (
+      source[key] instanceof Object &&
+      key in target &&
+      target[key] instanceof Object
+    ) {
+      output[key] = mergeDeep(target[key], source[key]);
+    } else {
+      output[key] = source[key];
+    }
+  }
+  return output;
+};
+
+const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
     try {
       await apiFetch(`/fichas/${id}`, {
         method: "PUT",
