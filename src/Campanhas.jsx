@@ -116,6 +116,8 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
   };
 
   if (campanhaAtiva) {
+    const linkConvite = `https://pressagios.onrender.com/campanha/${campanhaAtiva.codigo}`;
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white p-8">
         <button
@@ -127,6 +129,24 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
 
         <h1 className="text-3xl font-bold mb-4">📖 {campanhaAtiva.nome}</h1>
         <p className="text-zinc-400 mb-6">{campanhaAtiva.descricao}</p>
+
+        <div className="mb-8">
+          <label className="block text-sm text-zinc-400 mb-1">🔗 Link de convite:</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={linkConvite}
+              readOnly
+              className="flex-1 p-2 bg-zinc-800 border border-zinc-600 rounded-lg text-sm text-white"
+            />
+            <button
+              onClick={() => navigator.clipboard.writeText(linkConvite)}
+              className="px-3 py-2 text-sm bg-violet-600 hover:bg-violet-500 rounded-lg"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-8">
           <div>
