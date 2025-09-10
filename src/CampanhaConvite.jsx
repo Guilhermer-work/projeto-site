@@ -4,56 +4,40 @@ import { useParams, useNavigate } from "react-router-dom";
 export default function CampanhaConvite({ apiFetch }) {
   const { codigo } = useParams();
   const navigate = useNavigate();
-  const [campanha, setCampanha] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(null);
+  const [status, setStatus] = useState("Carregando convite...");
 
   useEffect(() => {
-    async function carregar() {
+    const entrarNaCampanha = async () => {
       try {
-        const res = await apiFetch(`/campanhas/convite/${codigo}`);
-        if (!res.ok) throw new Error("Convite inválido ou expirado");
+        const res = await apiFetch(`/campanhas/entrar/${codigo}`, {
+          method: "POST",
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Erro ao entrar na campanha");
+        }
+
         const data = await res.json();
-        setCampanha(data);
+        setStatus("✅ Você entrou na campanha!");
+
+        // Redireciona para a campanha após 2 segundos
+        setTimeout(() => {
+          navigate("/campanhas");
+        }, 2000);
       } catch (e) {
-        setErro(e.message);
-      } finally {
-        setLoading(false);
+        setStatus(`❌ ${e.message}`);
       }
-    }
-    carregar();
-  }, [codigo]);
+    };
 
-  const aceitarConvite = async () => {
-    try {
-      const res = await apiFetch(`/campanhas/aceitar/${codigo}`, { method: "POST" });
-      if (!res.ok) throw new Error("Erro ao aceitar convite");
-      navigate("/"); // volta para a lista de campanhas
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  if (loading) return <p className="text-zinc-400 p-8">Carregando convite...</p>;
-  if (erro) return <p className="text-red-400 p-8">{erro}</p>;
+    entrarNaCampanha();
+  }, [codigo, apiFetch, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white flex items-center justify-center">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">📖 Convite para Campanha</h1>
-        <p className="text-lg mb-6">
-          Você foi convidado para participar da campanha:
-        </p>
-        <div className="p-4 mb-6 rounded-lg bg-zinc-800 border border-zinc-700">
-          <h2 className="text-xl font-semibold">{campanha.nome}</h2>
-          <p className="text-zinc-400">{campanha.descricao || "Sem descrição"}</p>
-        </div>
-        <button
-          onClick={aceitarConvite}
-          className="px-6 py-3 bg-violet-600 hover:bg-violet-500 rounded-lg"
-        >
-          Aceitar Convite
-        </button>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-950 to-black text-white p-6">
+      <div className="max-w-md bg-zinc-900 p-8 rounded-xl border border-zinc-700 text-center">
+        <h1 className="text-2xl font-bold mb-4">🎲 Convite para Campanha</h1>
+        <p className="text-zinc-300">{status}</p>
       </div>
     </div>
   );
