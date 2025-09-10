@@ -1,6 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
-export default function Header({ onNavigate }) {
+export default function Header() {
   return (
     <header className="sticky top-0 z-10 border-b border-violet-700/40 bg-zinc-950/80 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-6">
@@ -11,24 +12,15 @@ export default function Header({ onNavigate }) {
 
         {/* Navegação */}
         <nav className="hidden md:flex gap-6 text-sm text-zinc-300">
-          <button
-            className="hover:text-white"
-            onClick={() => onNavigate("personagens")}
-          >
+          <Link to="/personagens" className="hover:text-white">
             Personagens
-          </button>
-          <button
-            className="hover:text-white"
-            onClick={() => onNavigate("campanhas")}
-          >
+          </Link>
+          <Link to="/campanhas" className="hover:text-white">
             Campanhas
-          </button>
-          <button
-            className="hover:text-white"
-            onClick={() => onNavigate("perfil")}
-          >
+          </Link>
+          <Link to="/perfil" className="hover:text-white">
             Perfil
-          </button>
+          </Link>
         </nav>
       </div>
     </header>
