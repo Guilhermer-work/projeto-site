@@ -5,12 +5,13 @@ import Campanhas from "./Campanhas";
 import Perfil from "./Perfil";
 import LoginPage from "./LoginPage";
 import CampanhaConvite from "./CampanhaConvite";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(true);
   const [fichas, setFichas] = useState([]);
+  const [activeId, setActiveId] = useState(null);
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
 
   const API = "https://pressagios-login.onrender.com";
@@ -102,8 +103,10 @@ export default function App() {
       });
       const data = await res.json();
       setFichas([...fichas, { id: data.id, nome: nova.nome, ...nova }]);
+      return data.id;
     } catch {
       alert("Erro ao criar ficha");
+      return null;
     }
   };
 
@@ -183,52 +186,58 @@ export default function App() {
         <Route
           path="/personagens"
           element={
-            <div className="p-8">
-              <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">
-                🎭 Personagens Registrados
-              </h1>
-              {fichas.length > 0 ? (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {fichas.map((f) => (
-                    <FichaCard
-                      key={f.id}
-                      ficha={f}
-                      onClick={() => window.location.href = `/personagens/${f.id}`}
-                      onDelete={() => setFichaParaDeletar(f.id)}
-                    />
-                  ))}
+            activeId ? (
+              <CRISSheet
+                ficha={fichas.find((f) => f.id === activeId)?.dados}
+                onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
+                onVoltar={() => setActiveId(null)}
+              />
+            ) : (
+              <div className="p-8">
+                <h1 className="text-3xl font-extrabold tracking-wide text-center mb-10">
+                  🎭 Personagens Registrados
+                </h1>
+                {fichas.length > 0 ? (
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {fichas.map((f) => (
+                      <FichaCard
+                        key={f.id}
+                        ficha={f}
+                        onClick={() => setActiveId(f.id)}
+                        onDelete={() => setFichaParaDeletar(f.id)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-zinc-500 italic">
+                    Nenhuma ficha criada ainda...
+                  </p>
+                )}
+
+                {fichaParaDeletar && (
+                  <ConfirmDeleteFicha
+                    onCancel={() => setFichaParaDeletar(null)}
+                    onConfirm={() => {
+                      deletarFicha(fichaParaDeletar);
+                      setFichaParaDeletar(null);
+                    }}
+                  />
+                )}
+
+                <div className="flex justify-center">
+                  <button
+                    onClick={async () => {
+                      const id = await criarFicha();
+                      if (id) setActiveId(id);
+                    }}
+                    className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-md hover:shadow-violet-500/30 transition-all"
+                  >
+                    ➕ Criar nova ficha
+                  </button>
                 </div>
-              ) : (
-                <p className="text-center text-zinc-500 italic">
-                  Nenhuma ficha criada ainda...
-                </p>
-              )}
-
-              {fichaParaDeletar && (
-                <ConfirmDeleteFicha
-                  onCancel={() => setFichaParaDeletar(null)}
-                  onConfirm={() => {
-                    deletarFicha(fichaParaDeletar);
-                    setFichaParaDeletar(null);
-                  }}
-                />
-              )}
-
-              <div className="flex justify-center">
-                <button
-                  onClick={criarFicha}
-                  className="mt-10 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-md hover:shadow-violet-500/30 transition-all"
-                >
-                  ➕ Criar nova ficha
-                </button>
               </div>
-            </div>
+            )
           }
-        />
-
-        <Route
-          path="/personagens/:id"
-          element={<FichaWrapper fichas={fichas} atualizarFicha={atualizarFicha} />}
         />
 
         <Route path="/campanhas" element={<Campanhas apiFetch={apiFetch} fichas={fichas} />} />
@@ -236,23 +245,6 @@ export default function App() {
         <Route path="/campanha/:codigo" element={<CampanhaConvite apiFetch={apiFetch} />} />
       </Routes>
     </BrowserRouter>
-  );
-}
-
-// COMPONENTES AUXILIARES
-function FichaWrapper({ fichas, atualizarFicha }) {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const ficha = fichas.find((f) => f.id === Number(id));
-
-  if (!ficha) return <p className="p-8 text-center text-zinc-500">Ficha não encontrada.</p>;
-
-  return (
-    <CRISSheet
-      ficha={ficha.dados}
-      onUpdate={(novosDados) => atualizarFicha(ficha.id, novosDados)}
-      onVoltar={() => navigate("/personagens")}
-    />
   );
 }
 
