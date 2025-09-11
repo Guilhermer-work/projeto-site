@@ -8,6 +8,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
   const [fichaSelecionada, setFichaSelecionada] = useState("");
   const [abaAtiva, setAbaAtiva] = useState("fichas");
   const [membros, setMembros] = useState([]);
+  const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
 
   useEffect(() => {
     carregarCampanhas();
@@ -49,6 +50,16 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
       abrirCampanha(created);
     } catch (e) {
       alert(e.message || "Erro desconhecido");
+    }
+  }
+
+  async function deletarCampanha(id) {
+    try {
+      await apiFetch(`/campanhas/${id}`, { method: "DELETE" });
+      setCampanhas((prev) => prev.filter((c) => c.id !== id));
+      if (campanhaAtiva?.id === id) setCampanhaAtiva(null);
+    } catch {
+      alert("Erro ao deletar campanha");
     }
   }
 
@@ -106,30 +117,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     }
   }
 
-  function copiarLinkConvite() {
-    if (!campanhaAtiva || !campanhaAtiva.codigo) return alert("Esta campanha não tem código de convite");
-    const link = `${window.location.origin}/campanha/${campanhaAtiva.codigo}`;
-    navigator.clipboard
-      .writeText(link)
-      .then(() => alert("Link de convite copiado!"))
-      .catch(() => alert("Falha ao copiar link"));
-  }
-
-  async function entrarCampanha() {
-    if (!campanhaAtiva) return;
-    try {
-      const res = await apiFetch(`/campanhas/${campanhaAtiva.id}/entrar`, { method: "POST" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Erro ao entrar na campanha");
-      }
-      await carregarMembros(campanhaAtiva.id);
-      alert("Você entrou na campanha!");
-    } catch (err) {
-      alert(err.message || "Erro ao entrar na campanha");
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white p-8">
       {!campanhaAtiva ? (
@@ -139,18 +126,26 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
           {campanhas.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
               {campanhas.map((c) => (
-                <div
+                <CampanhaCard
                   key={c.id}
+                  campanha={c}
                   onClick={() => abrirCampanha(c)}
-                  className="cursor-pointer p-6 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
-                >
-                  <div className="text-xl font-bold mb-2">{c.nome}</div>
-                  <div className="text-sm text-zinc-400">{c.descricao || "Sem descrição"}</div>
-                </div>
+                  onDelete={() => setCampanhaParaDeletar(c.id)}
+                />
               ))}
             </div>
           ) : (
             <p className="text-zinc-500 italic mb-10">Nenhuma campanha criada ainda...</p>
+          )}
+
+          {campanhaParaDeletar && (
+            <ConfirmDeleteCampanha
+              onCancel={() => setCampanhaParaDeletar(null)}
+              onConfirm={() => {
+                deletarCampanha(campanhaParaDeletar);
+                setCampanhaParaDeletar(null);
+              }}
+            />
           )}
 
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700 max-w-lg">
@@ -181,14 +176,12 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
 
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold">📖 {campanhaAtiva.nome}</h1>
-            <div className="flex items-center gap-2">
-              <button onClick={copiarLinkConvite} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg">
-                📋 Copiar link
-              </button>
-              <button onClick={entrarCampanha} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg">
-                ➕ Entrar
-              </button>
-            </div>
+            <button
+              onClick={() => setCampanhaParaDeletar(campanhaAtiva.id)}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg ml-2"
+            >
+              🗑️ Deletar
+            </button>
           </div>
 
           <p className="text-zinc-400 mb-4">{campanhaAtiva.descricao}</p>
@@ -268,14 +261,61 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
               ) : (
                 <p className="text-zinc-500 italic">Nenhum jogador entrou ainda...</p>
               )}
-
-              <div className="mt-6">
-                <button onClick={copiarLinkConvite} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg">📋 Copiar link de convite</button>
-              </div>
             </section>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function CampanhaCard({ campanha, onClick, onDelete }) {
+  return (
+    <div
+      onClick={onClick}
+      className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+        title="Deletar Campanha"
+      >
+        ❌
+      </button>
+      <div className="text-2xl font-bold text-white mb-2 group-hover:text-violet-300">
+        {campanha.nome}
+      </div>
+      <div className="text-sm text-zinc-400">{campanha.descricao || "Sem descrição"}</div>
+    </div>
+  );
+}
+
+function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+        <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Campanha</h2>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja excluir esta campanha? Essa ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+          >
+            Excluir
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
