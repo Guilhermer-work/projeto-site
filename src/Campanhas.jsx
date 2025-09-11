@@ -151,7 +151,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, usuarioAtual
                       <h3 className="font-bold">{f.dados?.profile?.nome || "Sem Nome"}</h3>
                       <p className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador}</p>
                     </div>
-                    {(f.dono_id === usuarioAtual?.id) && (
+                    {(Number(f.dono_id) === Number(usuarioAtual?.id)) && (
                       <button onClick={() => setFichaConfig(f)} className="absolute top-2 right-2 text-zinc-400 hover:text-white">⚙️</button>
                     )}
                   </div>
