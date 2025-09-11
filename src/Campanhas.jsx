@@ -117,6 +117,15 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
     }
   }
 
+  function copiarLinkConvite() {
+    if (!campanhaAtiva || !campanhaAtiva.codigo) return alert("Esta campanha não tem código de convite");
+    const link = `${window.location.origin}/campanha/${campanhaAtiva.codigo}`;
+    navigator.clipboard
+      .writeText(link)
+      .then(() => alert("Link de convite copiado!"))
+      .catch(() => alert("Falha ao copiar link"));
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white p-8">
       {!campanhaAtiva ? (
@@ -176,12 +185,20 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
 
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold">📖 {campanhaAtiva.nome}</h1>
-            <button
-              onClick={() => setCampanhaParaDeletar(campanhaAtiva.id)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg ml-2"
-            >
-              🗑️ Deletar
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={copiarLinkConvite}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
+              >
+                📋 Copiar link
+              </button>
+              <button
+                onClick={() => setCampanhaParaDeletar(campanhaAtiva.id)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg ml-2"
+              >
+                🗑️ Deletar
+              </button>
+            </div>
           </div>
 
           <p className="text-zinc-400 mb-4">{campanhaAtiva.descricao}</p>
