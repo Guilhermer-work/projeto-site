@@ -13,6 +13,7 @@ export default function App() {
   const [fichas, setFichas] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
+  const [user, setUser] = useState(null);
 
   const API = "https://pressagios-login.onrender.com";
 
@@ -47,6 +48,7 @@ export default function App() {
       if (!newToken) {
         setIsLoggedIn(false);
         setFichas([]);
+        setUser(null);
         localStorage.removeItem("token");
         throw new Error("Sessão expirada");
       }
@@ -68,9 +70,22 @@ export default function App() {
     if (token) {
       setIsLoggedIn(true);
       carregarFichas();
+      carregarUser();
     }
     setLoadingLogin(false);
   }, []);
+
+  const carregarUser = async () => {
+    try {
+      const res = await apiFetch("/me");
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar usuário", err);
+    }
+  };
 
   const carregarFichas = async () => {
     try {
@@ -113,22 +128,22 @@ export default function App() {
   const atualizarFicha = async (id, novosDados) => {
     const fichaAtual = fichas.find((f) => f.id === id);
     const mergeDeep = (target, source) => {
-  const output = { ...target };
-  for (const key of Object.keys(source)) {
-    if (
-      source[key] instanceof Object &&
-      key in target &&
-      target[key] instanceof Object
-    ) {
-      output[key] = mergeDeep(target[key], source[key]);
-    } else {
-      output[key] = source[key];
-    }
-  }
-  return output;
-};
+      const output = { ...target };
+      for (const key of Object.keys(source)) {
+        if (
+          source[key] instanceof Object &&
+          key in target &&
+          target[key] instanceof Object
+        ) {
+          output[key] = mergeDeep(target[key], source[key]);
+        } else {
+          output[key] = source[key];
+        }
+      }
+      return output;
+    };
 
-const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
+    const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
     try {
       await apiFetch(`/fichas/${id}`, {
         method: "PUT",
@@ -166,6 +181,7 @@ const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     setFichas([]);
+    setUser(null);
   };
 
   if (loadingLogin) return null;
@@ -173,8 +189,9 @@ const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
   if (!isLoggedIn) {
     return (
       <LoginPage
-        onLogin={() => {
+        onLogin={(dados) => {
           setIsLoggedIn(true);
+          setUser(dados.user);
           carregarFichas();
         }}
       />
@@ -253,7 +270,7 @@ const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
           }
         />
 
-        <Route path="/campanhas" element={<Campanhas apiFetch={apiFetch} fichas={fichas} />} />
+        <Route path="/campanhas" element={<Campanhas apiFetch={apiFetch} fichas={fichas} user={user} onAbrirFicha={(id) => setActiveId(id)} />} />
         <Route path="/perfil" element={<Perfil apiFetch={apiFetch} />} />
         <Route path="/campanha/:codigo" element={<CampanhaConvite apiFetch={apiFetch} />} />
       </Routes>
