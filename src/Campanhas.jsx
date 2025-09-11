@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
+export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [campanhas, setCampanhas] = useState([]);
   const [novaCampanha, setNovaCampanha] = useState({ nome: "", descricao: "" });
   const [campanhaAtiva, setCampanhaAtiva] = useState(null);
@@ -17,15 +17,10 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
   async function carregarCampanhas() {
     try {
       const res = await apiFetch("/campanhas");
-      if (!res.ok) {
-        console.error("Erro ao buscar campanhas", res.status);
-        return;
-      }
+      if (!res.ok) return;
       const data = await res.json();
       setCampanhas(data);
-    } catch (err) {
-      console.error("Erro ao carregar campanhas", err);
-    }
+    } catch {}
   }
 
   async function criarCampanha() {
@@ -69,8 +64,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
       if (!res.ok) throw new Error("Erro ao obter fichas");
       const data = await res.json();
       setFichasCampanha(data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setFichasCampanha([]);
     }
   }
@@ -81,8 +75,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
       if (!res.ok) throw new Error("Erro ao obter membros");
       const data = await res.json();
       setMembros(data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setMembros([]);
     }
   }
@@ -124,6 +117,33 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
       .writeText(link)
       .then(() => alert("Link de convite copiado!"))
       .catch(() => alert("Falha ao copiar link"));
+  }
+
+  async function sairCampanha() {
+    if (!campanhaAtiva) return;
+    try {
+      await apiFetch(`/campanhas/${campanhaAtiva.id}/sair`, { method: "POST" });
+      setCampanhaAtiva(null);
+      carregarCampanhas();
+    } catch {
+      alert("Erro ao sair da campanha");
+    }
+  }
+
+  async function removerJogador(userId) {
+    if (!campanhaAtiva) return;
+    if (!window.confirm("Remover jogador da campanha?")) return;
+
+    try {
+      await apiFetch(`/campanhas/${campanhaAtiva.id}/remover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      carregarMembros(campanhaAtiva.id);
+    } catch {
+      alert("Erro ao remover jogador");
+    }
   }
 
   return (
@@ -192,12 +212,22 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
               >
                 📋 Copiar link
               </button>
-              <button
-                onClick={() => setCampanhaParaDeletar(campanhaAtiva.id)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg ml-2"
-              >
-                🗑️ Deletar
-              </button>
+
+              {campanhaAtiva.user_id === user.id ? (
+                <button
+                  onClick={() => setCampanhaParaDeletar(campanhaAtiva.id)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg ml-2"
+                >
+                  🗑️ Deletar
+                </button>
+              ) : (
+                <button
+                  onClick={sairCampanha}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg ml-2"
+                >
+                  🚪 Sair
+                </button>
+              )}
             </div>
           </div>
 
@@ -266,12 +296,25 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha }) {
               {membros.length > 0 ? (
                 <ul className="space-y-3">
                   {membros.map((m) => (
-                    <li key={m.id} className="flex items-center gap-3 bg-zinc-900 p-3 rounded-lg border border-zinc-700">
-                      <img src={m.avatar || "https://placehold.co/40x40?text=?"} alt="avatar" className="w-10 h-10 rounded-full border border-zinc-600" />
-                      <div>
-                        <p className="text-white font-semibold">{m.username || m.email}</p>
-                        <p className="text-sm text-zinc-400">{m.email}</p>
+                    <li key={m.id} className="flex items-center justify-between gap-3 bg-zinc-900 p-3 rounded-lg border border-zinc-700">
+                      <div className="flex items-center gap-3">
+                        <img src={m.avatar || "https://placehold.co/40x40?text=?"} alt="avatar" className="w-10 h-10 rounded-full border border-zinc-600" />
+                        <div>
+                          <p className="text-white font-semibold">{m.username || m.email}</p>
+                          <p className="text-sm text-zinc-400">{m.email}</p>
+                        </div>
                       </div>
+
+                      {/* Mestre pode remover */}
+                      {campanhaAtiva.user_id === user.id && m.id !== user.id && (
+                        <button
+                          onClick={() => removerJogador(m.id)}
+                          className="text-zinc-400 hover:text-red-400"
+                          title="Remover jogador"
+                        >
+                          ⚙️
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
