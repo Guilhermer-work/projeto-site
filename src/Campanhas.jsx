@@ -48,6 +48,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, usuarioAtual
       const res = await apiFetch(`/campanhas/${campanhaId}/fichas`);
       if (!res.ok) return;
       const data = await res.json();
+      console.log("📌 Fichas carregadas:", data);
       setFichasCampanha(data);
     } catch (err) {
       console.error(err);
@@ -151,7 +152,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, usuarioAtual
                       <h3 className="font-bold">{f.dados?.profile?.nome || "Sem Nome"}</h3>
                       <p className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador}</p>
                     </div>
-                    {(Number(f.dono_id) === Number(usuarioAtual?.id)) && (
+                    {((f.dono_id == usuarioAtual?.id) || membros.find(m => m.id === usuarioAtual?.id && m.papel === "mestre")) && (
                       <button onClick={() => setFichaConfig(f)} className="absolute top-2 right-2 text-zinc-400 hover:text-white">⚙️</button>
                     )}
                   </div>
@@ -178,6 +179,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, usuarioAtual
                     <div>
                       <p>{m.username}</p>
                       <p className="text-xs text-zinc-400">{m.email}</p>
+                      <p className="text-xs text-violet-400">{m.papel}</p>
                     </div>
                   </li>
                 ))}
