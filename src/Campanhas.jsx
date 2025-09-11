@@ -389,3 +389,30 @@ function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
     </div>
   );
 }
+
+function ConfirmRemoveJogador({ jogador, onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+        <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Jogador</h2>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja remover <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da campanha?
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+          >
+            Remover
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
