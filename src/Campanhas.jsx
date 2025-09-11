@@ -9,6 +9,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [abaAtiva, setAbaAtiva] = useState("fichas");
   const [membros, setMembros] = useState([]);
   const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
+  const [jogadorParaRemover, setJogadorParaRemover] = useState(null);
 
   useEffect(() => {
     carregarCampanhas();
@@ -131,9 +132,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   }
 
   async function removerJogador(userId) {
-    if (!campanhaAtiva) return;
-    if (!window.confirm("Remover jogador da campanha?")) return;
-
     try {
       await apiFetch(`/campanhas/${campanhaAtiva.id}/remover`, {
         method: "POST",
@@ -308,7 +306,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                       {/* Mestre pode remover */}
                       {campanhaAtiva.user_id === user.id && m.id !== user.id && (
                         <button
-                          onClick={() => removerJogador(m.id)}
+                          onClick={() => setJogadorParaRemover(m)}
                           className="text-zinc-400 hover:text-red-400"
                           title="Remover jogador"
                         >
@@ -322,6 +320,18 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                 <p className="text-zinc-500 italic">Nenhum jogador entrou ainda...</p>
               )}
             </section>
+          )}
+
+          {/* Confirmar remoção de jogador */}
+          {jogadorParaRemover && (
+            <ConfirmRemoveJogador
+              jogador={jogadorParaRemover}
+              onCancel={() => setJogadorParaRemover(null)}
+              onConfirm={() => {
+                removerJogador(jogadorParaRemover.id);
+                setJogadorParaRemover(null);
+              }}
+            />
           )}
         </div>
       )}
