@@ -10,6 +10,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [membros, setMembros] = useState([]);
   const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
   const [jogadorParaRemover, setJogadorParaRemover] = useState(null);
+  const [fichaParaRemover, setFichaParaRemover] = useState(null);
 
   useEffect(() => {
     carregarCampanhas();
@@ -108,6 +109,15 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
       carregarFichasCampanha(campanhaAtiva.id);
     } catch (err) {
       alert(err.message || "Erro ao adicionar ficha na campanha");
+    }
+  }
+
+  async function removerFichaDaCampanha(fichaId) {
+    try {
+      await apiFetch(`/campanhas/${campanhaAtiva.id}/fichas/${fichaId}`, { method: "DELETE" });
+      carregarFichasCampanha(campanhaAtiva.id);
+    } catch {
+      alert("Erro ao remover ficha");
     }
   }
 
@@ -259,8 +269,21 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                     <div
                       key={f.id}
                       onClick={() => onAbrirFicha(f.id)}
-                      className="cursor-pointer p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
+                      className="cursor-pointer relative p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
                     >
+                      {(campanhaAtiva.user_id === user.id || f.user_id === user.id) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFichaParaRemover(f);
+                          }}
+                          className="absolute top-2 right-2 text-red-400 hover:text-red-600"
+                          title="Remover Ficha"
+                        >
+                          ❌
+                        </button>
+                      )}
+
                       <div className="text-lg font-bold mb-2">{f.dados?.profile?.nome || "Sem Nome"}</div>
                       <div className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador || "Desconhecido"}</div>
                       <div className="text-sm text-zinc-400">⚔️ {f.dados?.profile?.classe || "Sem classe"}</div>
@@ -269,6 +292,17 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                 </div>
               ) : (
                 <p className="text-zinc-500 italic">Nenhuma ficha adicionada ainda...</p>
+              )}
+
+              {fichaParaRemover && (
+                <ConfirmRemoveFicha
+                  ficha={fichaParaRemover}
+                  onCancel={() => setFichaParaRemover(null)}
+                  onConfirm={() => {
+                    removerFichaDaCampanha(fichaParaRemover.id);
+                    setFichaParaRemover(null);
+                  }}
+                />
               )}
 
               <div className="mt-8">
@@ -303,7 +337,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         </div>
                       </div>
 
-                      {/* Mestre pode remover */}
                       {campanhaAtiva.user_id === user.id && m.id !== user.id && (
                         <button
                           onClick={() => setJogadorParaRemover(m)}
@@ -322,7 +355,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
             </section>
           )}
 
-          {/* Confirmar remoção de jogador */}
           {jogadorParaRemover && (
             <ConfirmRemoveJogador
               jogador={jogadorParaRemover}
@@ -355,9 +387,7 @@ function CampanhaCard({ campanha, onClick, onDelete }) {
       >
         ❌
       </button>
-      <div className="text-2xl font-bold text-white mb-2 group-hover:text-violet-300">
-        {campanha.nome}
-      </div>
+      <div className="text-xl font-bold mb-2">{campanha.nome}</div>
       <div className="text-sm text-zinc-400">{campanha.descricao || "Sem descrição"}</div>
     </div>
   );
@@ -368,9 +398,7 @@ function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Campanha</h2>
-        <p className="text-zinc-300 mb-6">
-          Tem certeza que deseja excluir esta campanha? Essa ação não pode ser desfeita.
-        </p>
+        <p className="text-zinc-300 mb-6">Tem certeza que deseja excluir esta campanha? Essa ação não pode ser desfeita.</p>
         <div className="flex justify-end gap-4">
           <button
             onClick={onCancel}
@@ -395,22 +423,25 @@ function ConfirmRemoveJogador({ jogador, onCancel, onConfirm }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Jogador</h2>
-        <p className="text-zinc-300 mb-6">
-          Tem certeza que deseja remover <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da campanha?
-        </p>
+        <p className="text-zinc-300 mb-6">Tem certeza que deseja remover <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da campanha?</p>
         <div className="flex justify-end gap-4">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
-          >
-            Remover
-          </button>
+          <button onClick={onCancel} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg">Cancelar</button>
+          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg">Remover</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmRemoveFicha({ ficha, onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+        <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Ficha</h2>
+        <p className="text-zinc-300 mb-6">Tem certeza que deseja remover a ficha <span className="font-semibold text-white">{ficha.dados?.profile?.nome || "Sem Nome"}</span> da campanha?</p>
+        <div className="flex justify-end gap-4">
+          <button onClick={onCancel} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg">Cancelar</button>
+          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg">Remover</button>
         </div>
       </div>
     </div>
