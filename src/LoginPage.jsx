@@ -36,6 +36,7 @@ export default function LoginPage({ onLogin }) {
       const data = await res.json();
       if (data.accessToken) {
         localStorage.setItem("token", data.accessToken);
+        localStorage.setItem("user", JSON.stringify(data.user));
         onLogin();
       } else {
         alert(data.error || "Erro de autenticação");
