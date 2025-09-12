@@ -41,6 +41,8 @@ const handleSubmit = async (e) => {
       // se não vier JSON válido, data fica {}
     }
 
+    console.log('status', res.status, 'ok', res.ok, 'data', data);
+
     if (res.ok && data.accessToken) {
       // sucesso no login ou registro
       localStorage.setItem("token", data.accessToken);
