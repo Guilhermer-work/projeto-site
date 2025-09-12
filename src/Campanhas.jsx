@@ -60,40 +60,40 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
     }
   }
 
-async function carregarFichasCampanha(campanhaId) {
-  try {
-    const res = await apiFetch(`/campanhas/${campanhaId}/fichas`);
-    if (!res.ok) throw new Error(`Erro ao obter fichas (${res.status})`);
-    const data = await res.json().catch(() => []);
-    setFichasCampanha(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Erro ao carregar fichas da campanha:", err);
-    setFichasCampanha([]);
+  async function carregarFichasCampanha(campanhaId) {
+    try {
+      const res = await apiFetch(`/campanhas/${campanhaId}/fichas`);
+      if (!res.ok) throw new Error(`Erro ao obter fichas (${res.status})`);
+      const data = await res.json().catch(() => []);
+      setFichasCampanha(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Erro ao carregar fichas da campanha:", err);
+      setFichasCampanha([]);
+    }
   }
-}
 
-async function carregarMembros(campanhaId) {
-  try {
-    const res = await apiFetch(`/campanhas/${campanhaId}/membros`);
-    if (!res.ok) throw new Error(`Erro ao obter membros (${res.status})`);
-    const data = await res.json().catch(() => []);
-    setMembros(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Erro ao carregar membros:", err);
-    setMembros([]);
+  async function carregarMembros(campanhaId) {
+    try {
+      const res = await apiFetch(`/campanhas/${campanhaId}/membros`);
+      if (!res.ok) throw new Error(`Erro ao obter membros (${res.status})`);
+      const data = await res.json().catch(() => []);
+      setMembros(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Erro ao carregar membros:", err);
+      setMembros([]);
+    }
   }
-}
 
-function abrirCampanha(campanha) {
-  if (!campanha?.id) {
-    alert("Erro ao abrir campanha");
-    return;
+  function abrirCampanha(campanha) {
+    if (!campanha?.id) {
+      alert("Erro ao abrir campanha");
+      return;
+    }
+    setCampanhaAtiva(campanha);
+    setAbaAtiva("fichas");
+    carregarFichasCampanha(campanha.id).catch(() => alert("Erro ao carregar fichas"));
+    carregarMembros(campanha.id).catch(() => alert("Erro ao carregar membros"));
   }
-  setCampanhaAtiva(campanha);
-  setAbaAtiva("fichas");
-  carregarFichasCampanha(campanha.id).catch(() => alert("Erro ao carregar fichas"));
-  carregarMembros(campanha.id).catch(() => alert("Erro ao carregar membros"));
-}
 
   async function adicionarFicha() {
     if (!fichaSelecionada) return alert("Selecione uma ficha");
@@ -181,8 +181,6 @@ function abrirCampanha(campanha) {
             <p className="text-zinc-500 italic mb-10">Nenhuma campanha criada ainda...</p>
           )}
 
-
-
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700 max-w-lg">
             <h2 className="text-xl font-semibold mb-4">➕ Criar Nova Campanha</h2>
             <input
@@ -198,14 +196,20 @@ function abrirCampanha(campanha) {
               onChange={(e) => setNovaCampanha({ ...novaCampanha, descricao: e.target.value })}
               className="w-full p-2 mb-4 bg-zinc-800 border border-zinc-700 rounded-lg"
             />
-            <button onClick={criarCampanha} className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg">
+            <button
+              onClick={criarCampanha}
+              className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
+            >
               Criar Campanha
             </button>
           </div>
         </>
       ) : (
         <div>
-          <button onClick={() => setCampanhaAtiva(null)} className="mb-6 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg">
+          <button
+            onClick={() => setCampanhaAtiva(null)}
+            className="mb-6 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg"
+          >
             ← Voltar para lista de campanhas
           </button>
 
@@ -257,7 +261,6 @@ function abrirCampanha(campanha) {
             >
               📖 Personagens
             </button>
-
             <button
               className={abaAtiva === "jogadores" ? "px-4 py-2 border-b-2 border-violet-500 text-white" : "px-4 py-2 text-zinc-400"}
               onClick={() => setAbaAtiva("jogadores")}
@@ -316,13 +319,24 @@ function abrirCampanha(campanha) {
               <div className="mt-8">
                 <h3 className="text-xl font-semibold mb-2">Adicionar Ficha</h3>
                 <div className="flex gap-2">
-                  <select value={fichaSelecionada} onChange={(e) => setFichaSelecionada(e.target.value)} className="flex-1 p-2 bg-zinc-900 border border-zinc-700 rounded-lg">
+                  <select
+                    value={fichaSelecionada}
+                    onChange={(e) => setFichaSelecionada(e.target.value)}
+                    className="flex-1 p-2 bg-zinc-900 border border-zinc-700 rounded-lg"
+                  >
                     <option value="">Selecione uma ficha</option>
                     {fichas.map((f) => (
-                      <option key={f.id} value={f.id}>{f.dados?.profile?.nome || "Sem Nome"}</option>
+                      <option key={f.id} value={f.id}>
+                        {f.dados?.profile?.nome || "Sem Nome"}
+                      </option>
                     ))}
                   </select>
-                  <button onClick={adicionarFicha} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg">➕ Adicionar</button>
+                  <button
+                    onClick={adicionarFicha}
+                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg"
+                  >
+                    ➕ Adicionar
+                  </button>
                 </div>
               </div>
             </section>
@@ -336,9 +350,16 @@ function abrirCampanha(campanha) {
               {membros.length > 0 ? (
                 <ul className="space-y-3">
                   {membros.map((m) => (
-                    <li key={m.id} className="flex items-center justify-between gap-3 bg-zinc-900 p-3 rounded-lg border border-zinc-700">
+                    <li
+                      key={m.id}
+                      className="flex items-center justify-between gap-3 bg-zinc-900 p-3 rounded-lg border border-zinc-700"
+                    >
                       <div className="flex items-center gap-3">
-                        <img src={m.avatar || "https://placehold.co/40x40?text=?"} alt="avatar" className="w-10 h-10 rounded-full border border-zinc-600" />
+                        <img
+                          src={m.avatar || "https://placehold.co/40x40?text=?"}
+                          alt="avatar"
+                          className="w-10 h-10 rounded-full border border-zinc-600"
+                        />
                         <div>
                           <p className="text-white font-semibold">{m.username || m.email}</p>
                           <p className="text-sm text-zinc-400">{m.email}</p>
@@ -406,7 +427,9 @@ function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Campanha</h2>
-        <p className="text-zinc-300 mb-6">Tem certeza que deseja excluir esta campanha? Essa ação não pode ser desfeita.</p>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja excluir esta campanha? Essa ação não pode ser desfeita.
+        </p>
         <div className="flex justify-end gap-4">
           <button
             onClick={onCancel}
@@ -431,10 +454,24 @@ function ConfirmRemoveJogador({ jogador, onCancel, onConfirm }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Jogador</h2>
-        <p className="text-zinc-300 mb-6">Tem certeza que deseja remover <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da campanha?</p>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja remover{" "}
+          <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da
+          campanha?
+        </p>
         <div className="flex justify-end gap-4">
-          <button onClick={onCancel} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg">Cancelar</button>
-          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg">Remover</button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+          >
+            Remover
+          </button>
         </div>
       </div>
     </div>
@@ -446,10 +483,24 @@ function ConfirmRemoveFicha({ ficha, onCancel, onConfirm }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Ficha</h2>
-        <p className="text-zinc-300 mb-6">Tem certeza que deseja remover a ficha <span className="font-semibold text-white">{ficha.dados?.profile?.nome || "Sem Nome"}</span> da campanha?</p>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja remover a ficha{" "}
+          <span className="font-semibold text-white">{ficha.dados?.profile?.nome || "Sem Nome"}</span>{" "}
+          da campanha?
+        </p>
         <div className="flex justify-end gap-4">
-          <button onClick={onCancel} className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg">Cancelar</button>
-          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg">Remover</button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+          >
+            Remover
+          </button>
         </div>
       </div>
     </div>
