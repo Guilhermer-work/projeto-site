@@ -91,8 +91,8 @@ function abrirCampanha(campanha) {
   }
   setCampanhaAtiva(campanha);
   setAbaAtiva("fichas");
-  carregarFichasCampanha(campanha.id);
-  carregarMembros(campanha.id);
+  carregarFichasCampanha(campanha.id).catch(() => alert("Erro ao carregar fichas"));
+  carregarMembros(campanha.id).catch(() => alert("Erro ao carregar membros"));
 }
 
   async function adicionarFicha() {
