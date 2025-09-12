@@ -32,9 +32,11 @@ export default function App() {
     }
   }
 
-  async function apiFetch(url, options = {}) {
-    let token = localStorage.getItem("token");
-    let res = await fetch(`${API}${url}`, {
+async function apiFetch(url, options = {}) {
+  let token = localStorage.getItem("token");
+  let res;
+  try {
+    res = await fetch(`${API}${url}`, {
       ...options,
       headers: {
         ...(options.headers || {}),
@@ -43,27 +45,33 @@ export default function App() {
       },
       credentials: "include",
     });
-    if (res.status === 401) {
-      const newToken = await refreshAccessToken();
-      if (!newToken) {
-        setIsLoggedIn(false);
-        setFichas([]);
-        setUser(null);
-        localStorage.removeItem("token");
-        throw new Error("Sessão expirada");
-      }
-      res = await fetch(`${API}${url}`, {
-        ...options,
-        headers: {
-          ...(options.headers || {}),
-          Authorization: `Bearer ${newToken}`,
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-    }
-    return res;
+  } catch (err) {
+    console.error("Erro de rede:", err);
+    throw new Error("Falha de conexão com o servidor");
   }
+
+  if (res.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      setIsLoggedIn(false);
+      setFichas([]);
+      setUser(null);
+      localStorage.removeItem("token");
+      throw new Error("Sessão expirada");
+    }
+    res = await fetch(`${API}${url}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${newToken}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+  }
+
+  return res;
+}
 
   useEffect(() => {
     const token = localStorage.getItem("token");
