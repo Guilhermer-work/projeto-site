@@ -16,17 +16,14 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
     carregarCampanhas();
   }, []);
 
-async function carregarCampanhas() {
-  try {
-    const res = await apiFetch("/campanhas");
-    if (!res.ok) throw new Error("Erro ao buscar campanhas");
-    const data = await res.json().catch(() => []);
-    setCampanhas(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Erro ao carregar campanhas:", err);
-    setCampanhas([]);
+  async function carregarCampanhas() {
+    try {
+      const res = await apiFetch("/campanhas");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCampanhas(data);
+    } catch {}
   }
-}
 
   async function criarCampanha() {
     const nome = (novaCampanha.nome || "").trim();
@@ -63,27 +60,29 @@ async function carregarCampanhas() {
     }
   }
 
-  async function carregarFichasCampanha(campanhaId) {
-    try {
-      const res = await apiFetch(`/campanhas/${campanhaId}/fichas`);
-      if (!res.ok) throw new Error("Erro ao obter fichas");
-      const data = await res.json();
-      setFichasCampanha(data || []);
-    } catch {
-      setFichasCampanha([]);
-    }
+async function carregarFichasCampanha(campanhaId) {
+  try {
+    const res = await apiFetch(`/campanhas/${campanhaId}/fichas`);
+    if (!res.ok) throw new Error(`Erro ao obter fichas (${res.status})`);
+    const data = await res.json().catch(() => []);
+    setFichasCampanha(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Erro ao carregar fichas da campanha:", err);
+    setFichasCampanha([]);
   }
+}
 
-  async function carregarMembros(campanhaId) {
-    try {
-      const res = await apiFetch(`/campanhas/${campanhaId}/membros`);
-      if (!res.ok) throw new Error("Erro ao obter membros");
-      const data = await res.json();
-      setMembros(data || []);
-    } catch {
-      setMembros([]);
-    }
+async function carregarMembros(campanhaId) {
+  try {
+    const res = await apiFetch(`/campanhas/${campanhaId}/membros`);
+    if (!res.ok) throw new Error(`Erro ao obter membros (${res.status})`);
+    const data = await res.json().catch(() => []);
+    setMembros(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Erro ao carregar membros:", err);
+    setMembros([]);
   }
+}
 
   function abrirCampanha(campanha) {
     setCampanhaAtiva(campanha);
