@@ -33,15 +33,16 @@ const handleSubmit = async (e) => {
       ),
     });
 
+    // tenta ler o JSON só uma vez
     let data = {};
     try {
       data = await res.json();
     } catch {
-      // se não veio JSON, deixa data vazio
+      // se não vier JSON válido, data fica {}
     }
 
     if (res.ok && data.accessToken) {
-      // login/registro ok
+      // sucesso no login ou registro
       localStorage.setItem("token", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       onLogin();
@@ -50,6 +51,7 @@ const handleSubmit = async (e) => {
       alert(data.error || `Erro ${res.status} ao autenticar`);
     }
   } catch (err) {
+    // erro de rede/conexão
     alert("Erro de conexão com o servidor");
   } finally {
     setLoading(false);
