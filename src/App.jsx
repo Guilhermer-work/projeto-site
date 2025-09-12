@@ -32,56 +32,63 @@ export default function App() {
     }
   }
 
-async function apiFetch(url, options = {}) {
-  let token = localStorage.getItem("token");
-  let res;
-  try {
-    res = await fetch(`${API}${url}`, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: token ? `Bearer ${token}` : "",
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-  } catch (err) {
-    console.error("Erro de rede:", err);
-    throw new Error("Falha de conexão com o servidor");
-  }
-
-  if (res.status === 401) {
-    const newToken = await refreshAccessToken();
-    if (!newToken) {
-      setIsLoggedIn(false);
-      setFichas([]);
-      setUser(null);
-      localStorage.removeItem("token");
-      throw new Error("Sessão expirada");
+  async function apiFetch(url, options = {}) {
+    let token = localStorage.getItem("token");
+    let res;
+    try {
+      res = await fetch(`${API}${url}`, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: token ? `Bearer ${token}` : "",
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Erro de rede:", err);
+      throw new Error("Falha de conexão com o servidor");
     }
-    res = await fetch(`${API}${url}`, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${newToken}`,
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+
+    if (res.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) {
+        setIsLoggedIn(false);
+        setFichas([]);
+        setUser(null);
+        localStorage.removeItem("token");
+        throw new Error("Sessão expirada");
+      }
+      res = await fetch(`${API}${url}`, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${newToken}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+    }
+
+    return res;
   }
 
-  return res;
-}
-
+  // Verifica se já tinha token salvo ao iniciar
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
-      carregarFichas();
-      carregarUser();
     }
     setLoadingLogin(false);
   }, []);
+
+  // Sempre que logar, carrega user + fichas
+  useEffect(() => {
+    if (isLoggedIn) {
+      carregarFichas();
+      carregarUser();
+    }
+  }, [isLoggedIn]);
 
   const carregarUser = async () => {
     try {
@@ -200,7 +207,6 @@ async function apiFetch(url, options = {}) {
         onLogin={(dados) => {
           setIsLoggedIn(true);
           setUser(dados.user);
-          carregarFichas();
         }}
       />
     );
@@ -278,9 +284,22 @@ async function apiFetch(url, options = {}) {
           }
         />
 
-        <Route path="/campanhas" element={<Campanhas apiFetch={apiFetch} fichas={fichas} user={user} onAbrirFicha={(id) => setActiveId(id)} />} />
+        <Route
+          path="/campanhas"
+          element={
+            <Campanhas
+              apiFetch={apiFetch}
+              fichas={fichas}
+              user={user}
+              onAbrirFicha={(id) => setActiveId(id)}
+            />
+          }
+        />
         <Route path="/perfil" element={<Perfil apiFetch={apiFetch} />} />
-        <Route path="/campanha/:codigo" element={<CampanhaConvite apiFetch={apiFetch} />} />
+        <Route
+          path="/campanha/:codigo"
+          element={<CampanhaConvite apiFetch={apiFetch} />}
+        />
       </Routes>
     </BrowserRouter>
   );
@@ -336,7 +355,8 @@ function ConfirmDeleteFicha({ onCancel, onConfirm }) {
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Excluir Ficha</h2>
         <p className="text-zinc-300 mb-6">
-          Tem certeza que deseja excluir esta ficha? Essa ação não pode ser desfeita.
+          Tem certeza que deseja excluir esta ficha? Essa ação não pode ser
+          desfeita.
         </p>
         <div className="flex justify-end gap-4">
           <button
