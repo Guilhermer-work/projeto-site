@@ -411,6 +411,18 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   );
 }
 
+function CampanhaCard({ campanha, onClick, onDelete }) {
+  return (
+    <div
+      onClick={onClick}
+      className="cursor-pointer relative p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all group"
+    >
+      <div className="text-xl font-bold mb-2">{campanha.nome}</div>
+      <div className="text-sm text-zinc-400">{campanha.descricao || "Sem descrição"}</div>
+    </div>
+  );
+}
+
 function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
