@@ -16,14 +16,17 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
     carregarCampanhas();
   }, []);
 
-  async function carregarCampanhas() {
-    try {
-      const res = await apiFetch("/campanhas");
-      if (!res.ok) return;
-      const data = await res.json();
-      setCampanhas(data);
-    } catch {}
+async function carregarCampanhas() {
+  try {
+    const res = await apiFetch("/campanhas");
+    if (!res.ok) throw new Error("Erro ao buscar campanhas");
+    const data = await res.json().catch(() => []);
+    setCampanhas(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Erro ao carregar campanhas:", err);
+    setCampanhas([]);
   }
+}
 
   async function criarCampanha() {
     const nome = (novaCampanha.nome || "").trim();
