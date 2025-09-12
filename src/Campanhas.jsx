@@ -9,6 +9,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [abaAtiva, setAbaAtiva] = useState("fichas");
   const [membros, setMembros] = useState([]);
   const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
+  const [confirmarSaida, setConfirmarSaida] = useState(false);
   const [jogadorParaRemover, setJogadorParaRemover] = useState(null);
   const [fichaParaRemover, setFichaParaRemover] = useState(null);
 
@@ -232,7 +233,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                 </button>
               ) : (
                 <button
-                  onClick={sairCampanha}
+                  onClick={() => setConfirmarSaida(true)}
                   className="px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg ml-2"
                 >
                   🚪 Sair
@@ -448,6 +449,35 @@ function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
     </div>
   );
 }
+
+{confirmarSaida && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+      <h2 className="text-xl font-bold text-orange-400 mb-4">⚠️ Sair da Campanha</h2>
+      <p className="text-zinc-300 mb-6">
+        Tem certeza que deseja sair desta campanha? Você poderá voltar com o link de convite.
+      </p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => setConfirmarSaida(false)}
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={() => {
+            sairCampanha();
+            setConfirmarSaida(false);
+          }}
+          className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg"
+        >
+          Sair
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
 function ConfirmRemoveJogador({ jogador, onCancel, onConfirm }) {
   return (
