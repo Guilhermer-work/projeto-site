@@ -181,16 +181,6 @@ function abrirCampanha(campanha) {
             <p className="text-zinc-500 italic mb-10">Nenhuma campanha criada ainda...</p>
           )}
 
-          {campanhaParaDeletar && (
-            <ConfirmDeleteCampanha
-              onCancel={() => setCampanhaParaDeletar(null)}
-              onConfirm={() => {
-                deletarCampanha(campanhaParaDeletar);
-                setCampanhaParaDeletar(null);
-              }}
-            />
-          )}
-
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700 max-w-lg">
             <h2 className="text-xl font-semibold mb-4">➕ Criar Nova Campanha</h2>
             <input
@@ -398,6 +388,16 @@ function CampanhaCard({ campanha, onClick, onDelete }) {
     </div>
   );
 }
+
+          {campanhaParaDeletar && (
+            <ConfirmDeleteCampanha
+              onCancel={() => setCampanhaParaDeletar(null)}
+              onConfirm={() => {
+                deletarCampanha(campanhaParaDeletar);
+                setCampanhaParaDeletar(null);
+              }}
+            />
+          )}
 
 function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
   return (
