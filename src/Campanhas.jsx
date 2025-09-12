@@ -84,12 +84,16 @@ async function carregarMembros(campanhaId) {
   }
 }
 
-  function abrirCampanha(campanha) {
-    setCampanhaAtiva(campanha);
-    setAbaAtiva("fichas");
-    carregarFichasCampanha(campanha.id);
-    carregarMembros(campanha.id);
+function abrirCampanha(campanha) {
+  if (!campanha?.id) {
+    alert("Erro ao abrir campanha");
+    return;
   }
+  setCampanhaAtiva(campanha);
+  setAbaAtiva("fichas");
+  carregarFichasCampanha(campanha.id);
+  carregarMembros(campanha.id);
+}
 
   async function adicionarFicha() {
     if (!fichaSelecionada) return alert("Selecione uma ficha");
