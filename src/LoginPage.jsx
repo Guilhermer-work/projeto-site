@@ -10,43 +10,51 @@ export default function LoginPage({ onLogin }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
+  try {
+    const res = await fetch(`${API}/${isRegistering ? "register" : "login"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(
+        isRegistering
+          ? {
+              email: form.email,
+              password: form.password,
+              username: form.username,
+            }
+          : {
+              email: form.email,
+              password: form.password,
+            }
+      ),
+    });
+
+    let data = {};
     try {
-      const res = await fetch(`${API}/${isRegistering ? "register" : "login"}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(
-          isRegistering
-            ? {
-                email: form.email,
-                password: form.password,
-                username: form.username,
-              }
-            : {
-                email: form.email,
-                password: form.password,
-              }
-        ),
-      });
-
-      const data = await res.json();
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        onLogin();
-      } else {
-        alert(data.error || "Erro de autenticação");
-      }
-    } catch (err) {
-      alert("Erro de conexão com o servidor");
-    } finally {
-      setLoading(false);
+      data = await res.json();
+    } catch {
+      // se não veio JSON, deixa data vazio
     }
-  };
+
+    if (res.ok && data.accessToken) {
+      // login/registro ok
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      onLogin();
+    } else {
+      // servidor retornou erro ou não veio token
+      alert(data.error || `Erro ${res.status} ao autenticar`);
+    }
+  } catch (err) {
+    alert("Erro de conexão com o servidor");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-950 to-black text-white">
