@@ -312,7 +312,7 @@ export default function Campanhas({ apiFetch, fichas, user }) {
                   {fichasCampanha.map((f) => (
                     <div
                       key={f.id}
-                      onClick={() => abrirFichaCampanha(f.id)}
+                      onClick={() => setFichaAberta(f)}
                       className="cursor-pointer relative p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
                     >
                       {(campanhaAtiva.user_id === user.id || f.user_id === user.id) && (
