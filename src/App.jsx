@@ -114,11 +114,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    // expõe a função globalmente para Campanhas.jsx poder chamar
-    window.carregarFichasGlobais = carregarFichas;
-  }, []);
-
   const criarFicha = async () => {
     const nova = {
       nome: "Novo Personagem",
@@ -162,11 +157,6 @@ export default function App() {
       }
       return output;
     };
-
-  useEffect(() => {
-    window.carregarFichasGlobais = carregarFichas;
-    window.atualizarFichaGlobal = atualizarFicha;
-  }, []);
 
     const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
     try {
