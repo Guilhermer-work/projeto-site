@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import CRISSheet from "./CRISSheet";
 
-export default function Campanhas({ apiFetch, fichas, user }) {
+export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [campanhas, setCampanhas] = useState([]);
   const [novaCampanha, setNovaCampanha] = useState({ nome: "", descricao: "" });
   const [campanhaAtiva, setCampanhaAtiva] = useState(null);
   const [fichasCampanha, setFichasCampanha] = useState([]);
   const [fichaSelecionada, setFichaSelecionada] = useState("");
-  const [fichaAberta, setFichaAberta] = useState(null);
   const [confirmarSaida, setConfirmarSaida] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState("fichas");
   const [membros, setMembros] = useState([]);
@@ -98,36 +96,6 @@ export default function Campanhas({ apiFetch, fichas, user }) {
     carregarMembros(campanha.id).catch(() => alert("Erro ao carregar membros"));
   }
 
-  async function abrirFichaCampanha(fichaId) {
-    try {
-      const res = await apiFetch(`/fichas/${fichaId}`);
-      if (!res.ok) throw new Error("Erro ao carregar ficha");
-      const ficha = await res.json();
-      setFichaAberta(ficha);
-    } catch (err) {
-      alert(err.message);
-    }
-  }
-
-async function atualizarFichaCampanha(id, novosDados) {
-  try {
-    if (typeof window.atualizarFichaGlobal === "function") {
-      await window.atualizarFichaGlobal(id, novosDados);
-    }
-
-    // atualiza ficha aberta com os dados novos
-    setFichaAberta((prev) => prev ? { ...prev, dados: { ...prev.dados, ...novosDados } } : null);
-
-    // recarrega fichas da campanha e globais
-    carregarFichasCampanha(campanhaAtiva.id);
-    if (typeof window.carregarFichasGlobais === "function") {
-      window.carregarFichasGlobais();
-    }
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
   async function adicionarFicha() {
     if (!fichaSelecionada) return alert("Selecione uma ficha");
     if (!campanhaAtiva) return alert("Abra uma campanha antes de adicionar ficha");
@@ -193,21 +161,9 @@ async function atualizarFichaCampanha(id, novosDados) {
     }
   }
 
-  // --- Render ---
-  if (fichaAberta) {
-    return (
-      <CRISSheet
-        ficha={fichaAberta}
-        onSalvar={(novosDados) => atualizarFichaCampanha(fichaAberta.id, novosDados)}
-        onFechar={() => setFichaAberta(null)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-white p-8">
       {!campanhaAtiva ? (
-        // --- Lista de campanhas ---
         <>
           <h1 className="text-3xl font-bold mb-6">📚 Minhas Campanhas</h1>
 
@@ -250,7 +206,6 @@ async function atualizarFichaCampanha(id, novosDados) {
           </div>
         </>
       ) : (
-        // --- Detalhe da campanha ativa ---
         <div>
           <button
             onClick={() => setCampanhaAtiva(null)}
@@ -287,6 +242,26 @@ async function atualizarFichaCampanha(id, novosDados) {
             </div>
           </div>
 
+          {campanhaParaDeletar && (
+            <ConfirmDeleteCampanha
+              onCancel={() => setCampanhaParaDeletar(null)}
+              onConfirm={() => {
+                deletarCampanha(campanhaParaDeletar);
+                setCampanhaParaDeletar(null);
+              }}
+            />
+          )}
+
+          {confirmarSaida && (
+            <ConfirmExitCampaign
+              onCancel={() => setConfirmarSaida(false)}
+              onConfirm={() => {
+                sairCampanha();
+                setConfirmarSaida(false);
+              }}
+            />
+          )}
+
           <p className="text-zinc-400 mb-4">{campanhaAtiva.descricao}</p>
 
           {/* Abas */}
@@ -315,7 +290,7 @@ async function atualizarFichaCampanha(id, novosDados) {
                   {fichasCampanha.map((f) => (
                     <div
                       key={f.id}
-                      onClick={() => abrirFichaCampanha(f.id)}
+                      onClick={() => onAbrirFicha(f.id)}
                       className="cursor-pointer relative p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
                     >
                       {(campanhaAtiva.user_id === user.id || f.user_id === user.id) && (
@@ -339,6 +314,17 @@ async function atualizarFichaCampanha(id, novosDados) {
                 </div>
               ) : (
                 <p className="text-zinc-500 italic">Nenhuma ficha adicionada ainda...</p>
+              )}
+
+              {fichaParaRemover && (
+                <ConfirmRemoveFicha
+                  ficha={fichaParaRemover}
+                  onCancel={() => setFichaParaRemover(null)}
+                  onConfirm={() => {
+                    removerFichaDaCampanha(fichaParaRemover.id);
+                    setFichaParaRemover(null);
+                  }}
+                />
               )}
 
               <div className="mt-8">
@@ -371,6 +357,7 @@ async function atualizarFichaCampanha(id, novosDados) {
           {abaAtiva === "jogadores" && (
             <section>
               <h2 className="text-2xl font-semibold mb-4">Jogadores</h2>
+
               {membros.length > 0 ? (
                 <ul className="space-y-3">
                   {membros.map((m) => (
@@ -418,34 +405,12 @@ async function atualizarFichaCampanha(id, novosDados) {
               }}
             />
           )}
-
-          {fichaParaRemover && (
-            <ConfirmRemoveFicha
-              ficha={fichaParaRemover}
-              onCancel={() => setFichaParaRemover(null)}
-              onConfirm={() => {
-                removerFichaDaCampanha(fichaParaRemover.id);
-                setFichaParaRemover(null);
-              }}
-            />
-          )}
-
-          {campanhaParaDeletar && (
-            <ConfirmDeleteCampanha
-              onCancel={() => setCampanhaParaDeletar(null)}
-              onConfirm={() => {
-                deletarCampanha(campanhaParaDeletar);
-                setCampanhaParaDeletar(null);
-              }}
-            />
-          )}
         </div>
       )}
     </div>
   );
 }
 
-// --- Componentes auxiliares ---
 function CampanhaCard({ campanha, onClick, onDelete }) {
   return (
     <div
@@ -495,14 +460,42 @@ function ConfirmDeleteCampanha({ onCancel, onConfirm }) {
   );
 }
 
+function ConfirmExitCampaign({ onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+        <h2 className="text-xl font-bold text-orange-400 mb-4">⚠️ Sair da Campanha</h2>
+        <p className="text-zinc-300 mb-6">
+          Tem certeza que deseja sair desta campanha? Você poderá voltar com o link de convite.
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmRemoveJogador({ jogador, onCancel, onConfirm }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Jogador</h2>
         <p className="text-zinc-300 mb-6">
-          Tem certeza que deseja remover {" "}
-          <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da campanha?
+          Tem certeza que deseja remover{" "}
+          <span className="font-semibold text-white">{jogador.username || jogador.email}</span> da
+          campanha?
         </p>
         <div className="flex justify-end gap-4">
           <button
@@ -529,8 +522,9 @@ function ConfirmRemoveFicha({ ficha, onCancel, onConfirm }) {
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
         <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Remover Ficha</h2>
         <p className="text-zinc-300 mb-6">
-          Tem certeza que deseja remover a ficha {" "}
-          <span className="font-semibold text-white">{ficha.dados?.profile?.nome || "Sem Nome"}</span> da campanha?
+          Tem certeza que deseja remover a ficha{" "}
+          <span className="font-semibold text-white">{ficha.dados?.profile?.nome || "Sem Nome"}</span>{" "}
+          da campanha?
         </p>
         <div className="flex justify-end gap-4">
           <button
@@ -550,4 +544,3 @@ function ConfirmRemoveFicha({ ficha, onCancel, onConfirm }) {
     </div>
   );
 }
-
