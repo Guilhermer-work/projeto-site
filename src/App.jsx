@@ -163,6 +163,11 @@ export default function App() {
       return output;
     };
 
+  useEffect(() => {
+    window.carregarFichasGlobais = carregarFichas;
+    window.atualizarFichaGlobal = atualizarFicha;
+  }, []);
+
     const fichaFinal = mergeDeep(fichaAtual.dados, novosDados);
     try {
       await apiFetch(`/fichas/${id}`, {
