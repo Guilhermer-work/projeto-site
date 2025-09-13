@@ -114,12 +114,18 @@ export default function Campanhas({ apiFetch, fichas, user }) {
       const res = await apiFetch(`/fichas/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novosDados),
+        body: JSON.stringify({ dados: novosDados }),
       });
-      if (!res.ok) throw new Error("Erro ao salvar ficha");
-      const updated = await res.json();
-      setFichaAberta(updated);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Erro ao salvar ficha");
+      
+      // recarrega do backend para refletir em ambos
+      setFichaAberta({ id, dados: novosDados });
       carregarFichasCampanha(campanhaAtiva.id);
+      // também recarrega fichas globais (Personagens)
+      if (typeof window.carregarFichasGlobais === "function") {
+        window.carregarFichasGlobais();
+      }
     } catch (err) {
       alert(err.message);
     }
