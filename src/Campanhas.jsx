@@ -109,27 +109,24 @@ export default function Campanhas({ apiFetch, fichas, user }) {
     }
   }
 
-  async function atualizarFichaCampanha(id, novosDados) {
-    try {
-      const res = await apiFetch(`/fichas/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dados: novosDados }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || "Erro ao salvar ficha");
-      
-      // recarrega do backend para refletir em ambos
-      setFichaAberta({ id, dados: novosDados });
-      carregarFichasCampanha(campanhaAtiva.id);
-      // também recarrega fichas globais (Personagens)
-      if (typeof window.carregarFichasGlobais === "function") {
-        window.carregarFichasGlobais();
-      }
-    } catch (err) {
-      alert(err.message);
+async function atualizarFichaCampanha(id, novosDados) {
+  try {
+    if (typeof window.atualizarFichaGlobal === "function") {
+      await window.atualizarFichaGlobal(id, novosDados);
     }
+
+    // atualiza ficha aberta com os dados novos
+    setFichaAberta((prev) => prev ? { ...prev, dados: { ...prev.dados, ...novosDados } } : null);
+
+    // recarrega fichas da campanha e globais
+    carregarFichasCampanha(campanhaAtiva.id);
+    if (typeof window.carregarFichasGlobais === "function") {
+      window.carregarFichasGlobais();
+    }
+  } catch (err) {
+    alert(err.message);
   }
+}
 
   async function adicionarFicha() {
     if (!fichaSelecionada) return alert("Selecione uma ficha");
