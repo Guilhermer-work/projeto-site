@@ -312,16 +312,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         </button>
                     )}
 
-                      <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // não abrir a ficha quando clicar no X
-                            setFichaParaRemover(f);
-                          }}
-                          className="absolute top-2 right-2 text-red-400 hover:text-red-600"
-                          title="Remover Ficha"
-                        >
-                          ❌
-                        </button>
 
                       <div className="text-lg font-bold mb-2">{f.dados?.profile?.nome || "Sem Nome"}</div>
                       <div className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador || "Desconhecido"}</div>
@@ -333,16 +323,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                 <p className="text-zinc-500 italic">Nenhuma ficha adicionada ainda...</p>
               )}
 
-              {fichaParaRemover && (
-                <ConfirmRemoveFicha
-                  ficha={fichaParaRemover}
-                  onCancel={() => setFichaParaRemover(null)}
-                  onConfirm={() => {
-                    removerFichaDaCampanha(fichaParaRemover.id);
-                    setFichaParaRemover(null);
-                  }}
-                />
-              )}
 
               {fichaConfig && (
                 <ConfigFichaModal
@@ -581,8 +561,12 @@ function ConfigFichaModal({ ficha, onCancel, onConfirmPermissao, onConfirmDelete
   const [visivel, setVisivel] = useState(ficha?.visivel || false);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50"
+    onClick={onCancel}
+    >
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg"
+      onClick={(e) => e.stopPropagation()} // impede fechar ao clicar dentro
+      >
         <h2 className="text-xl font-bold text-violet-400 mb-4">⚙️ Configurações da Ficha</h2>
         <p className="mb-4 text-zinc-300">
           Gerencie as permissões e opções para a ficha{" "}
