@@ -13,6 +13,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
   const [jogadorParaRemover, setJogadorParaRemover] = useState(null);
   const [fichaParaRemover, setFichaParaRemover] = useState(null);
+  const [fichaConfig, setFichaConfig] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -297,6 +298,19 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                       navigate("/");
                     }}
                     >
+                    
+                    {f.user_id === user.id && (
+                      <button
+                          onClick={(e) => {
+                            e.stopPropagation(); 
+                            setFichaConfig(f);
+                          }}
+                          className="absolute top-2 right-10 text-zinc-400 hover:text-violet-400"
+                          title="Configurações da ficha"
+                        >
+                          ⚙️
+                        </button>
+                    )}
 
                       <button
                           onClick={(e) => {
@@ -326,6 +340,21 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                   onConfirm={() => {
                     removerFichaDaCampanha(fichaParaRemover.id);
                     setFichaParaRemover(null);
+                  }}
+                />
+              )}
+
+              {fichaConfig && (
+                <ConfigFichaModal
+                  ficha={fichaConfig}
+                  onCancel={() => setFichaConfig(null)}
+                  onConfirmPermissao={(id, visivel) => {
+                    console.log("Salvar permissão da ficha", id, visivel);
+                    setFichaConfig(null);
+                  }} 
+                  onConfirmDelete={(id) => {
+                    removerFichaDaCampanha(id);
+                    setFichaConfig(null);
                   }}
                 />
               )}
@@ -541,6 +570,56 @@ function ConfirmRemoveFicha({ ficha, onCancel, onConfirm }) {
             className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
           >
             Remover
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfigFichaModal({ ficha, onCancel, onConfirmPermissao, onConfirmDelete }) {
+  const [visivel, setVisivel] = useState(ficha?.visivel || false);
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-96 shadow-lg">
+        <h2 className="text-xl font-bold text-violet-400 mb-4">⚙️ Configurações da Ficha</h2>
+        <p className="mb-4 text-zinc-300">
+          Gerencie as permissões e opções para a ficha{" "}
+          <span className="font-semibold text-white">
+            {ficha.dados?.profile?.nome || ficha.nome || "Sem Nome"}
+          </span>
+        </p>
+
+        <label className="flex items-center gap-2 mb-6">
+          <input
+            type="checkbox"
+            checked={visivel}
+            onChange={(e) => setVisivel(e.target.checked)}
+          />
+          <span className="text-sm text-zinc-300">
+            Permitir que outros jogadores vejam a ficha
+          </span>
+        </label>
+
+        <div className="flex justify-between">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirmPermissao(ficha.id, visivel)}
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg"
+          >
+            Salvar
+          </button>
+          <button
+            onClick={() => onConfirmDelete(ficha.id)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+          >
+            Remover da Campanha
           </button>
         </div>
       </div>
