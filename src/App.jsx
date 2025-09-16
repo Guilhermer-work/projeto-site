@@ -291,7 +291,18 @@ export default function App() {
               apiFetch={apiFetch}
               fichas={fichas}
               user={user}
-              onAbrirFicha={(id) => setActiveId(id)}
+              onAbrirFicha={(id, dadosDiretos) => {
+                if (dadosDiretos) {
+                  // garante abrir com os dados da campanha
+                  setActiveId(id);
+                  setFichas((prev) => {
+                    if (prev.some((f) => f.id === id)) return prev; 
+                    return [...prev, { id, nome: dadosDiretos.profile?.nome, dados: dadosDiretos }];
+                  });
+                } else {
+                  setActiveId(id);
+                }
+              }}
             />
           }
         />
