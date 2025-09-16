@@ -354,7 +354,7 @@ function Roller({ onRoll }) {
   );
 }
 
-export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
+export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar = false }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
   const attrs = ficha?.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
@@ -377,12 +377,14 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
 
   // 🔄 Atualizações sincronizadas com App.jsx
   const updateProfileField = (field, value) => {
+    if (somenteVisualizar) return;
     onUpdate({
       profile: { ...profile, [field]: value },
     });
   };
 
   const updateAttr = (key, value) => {
+    if (somenteVisualizar) return;
     const num = Number(value);
     onUpdate({
       attrs: { ...attrs, [key]: Number.isNaN(num) ? 0 : num },
@@ -390,12 +392,14 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   };
 
   const updateBar = (bar, field, value) => {
+    if (somenteVisualizar) return;
     const current = bar === "hp" ? hp : bar === "san" ? san : esf;
     const updated = { ...current, [field]: value };
     onUpdate({ [bar]: updated });
   };
 
   const updatePericia = (name, field, value) => {
+    if (somenteVisualizar) return;
     const next = pericias.map((p) =>
       p.name === name 
         ? { ...p, [field]: field === "attr" ? value : parseNum(value) } 
@@ -405,11 +409,13 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar }) {
   };
 
   const addAtaque = () => {
+    if (somenteVisualizar) return;
     const novo = { id: Date.now(), nome: "Novo Ataque", dano: "1d6", crit: "20/x2", tipo: "", attr: "FOR", skill: "Luta", desc: "" };
     onUpdate({ ataques: [...ataques, novo] });
   };
 
   const updateAtaque = (idx, patch) => {
+    if (somenteVisualizar) return;
     const next = ataques.map((a, i) => (i === idx ? { ...a, ...patch } : a));
     onUpdate({ ataques: next });
   };
@@ -562,6 +568,7 @@ function rollAttack(a) {
               <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
                 <label className="text-zinc-400">Personagem
                   <DebouncedInput
+                    disabled={somenteVisualizar}
                     className="mt-1 w-full bg-black/40 border border-zinc-700 rounded px-1 py-0.5 text-xs"
                     value={profile.nome}
                     onChange={(v) => updateProfileField("nome", v)}
