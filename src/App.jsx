@@ -14,6 +14,8 @@ export default function App() {
   const [activeId, setActiveId] = useState(null);
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
   const [user, setUser] = useState(null);
+  const [somenteVisualizar, setSomenteVisualizar] = useState(false);
+
 
   const API = "https://pressagios-login.onrender.com";
 
@@ -235,6 +237,7 @@ export default function App() {
                 ficha={fichas.find((f) => f.id === activeId)?.dados}
                 onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
                 onVoltar={() => setActiveId(null)}
+                somenteVisualizar={somenteVisualizar}
               />
             ) : (
               <div className="p-8">
@@ -247,7 +250,10 @@ export default function App() {
                       <FichaCard
                         key={f.id}
                         ficha={f}
-                        onClick={() => setActiveId(f.id)}
+                        onClick={() => {
+                          setActiveId(f.id)
+                          setSomenteVisualizar(false);
+                        }}
                         onDelete={() => setFichaParaDeletar(f.id)}
                       />
                     ))}
@@ -291,8 +297,8 @@ export default function App() {
               apiFetch={apiFetch}
               fichas={fichas}
               user={user}
-              onAbrirFicha={(id, fichaDireta = null) => {
-                if (fichaDireta) {
+              onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
+                if (fichaDireta && !somenteVisualizar) {
                   // garante abrir com os dados da campanha
                   
                   setFichas((prev) => {
@@ -301,6 +307,7 @@ export default function App() {
                   });
                 }
                   setActiveId(id); 
+                  setSomenteVisualizar(somenteVisualizar);
               }}
             />
           }
