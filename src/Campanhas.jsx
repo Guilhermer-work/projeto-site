@@ -336,8 +336,17 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                 <ConfigFichaModal
                   ficha={fichaConfig}
                   onCancel={() => setFichaConfig(null)}
-                  onConfirmPermissao={(id, visivel) => {
-                    console.log("Salvar permissão da ficha", id, visivel);
+                  onConfirmPermissao={async (id, visivel) => {
+                    try {
+                      await apiFetch(`/campanhas/${campanhaAtiva.id}/fichas/${id}/permissao`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ visivel }),
+                      });
+                    await carregarFichasCampanha(campanhaAtiva.id);
+                    } catch (err) {
+                      alert("Erro ao salvar permissão");
+                    } 
                     setFichaConfig(null);
                   }} 
                   onConfirmDelete={(id) => {
