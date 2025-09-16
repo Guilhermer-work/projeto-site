@@ -290,13 +290,13 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                   {fichasCampanha.map((f) => (
                     <div
                       key={f.id}
-                      onClick={() => onAbrirFicha(f.id, f.dados)}
                       className="cursor-pointer relative p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
+                      onClick={() => onAbrirFicha(f.id, f)}
                     >
-                      {(campanhaAtiva.user_id === user.id || f.user_id === user.id) && (
-                        <button
+
+                      <button
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation(); // não abrir a ficha quando clicar no X
                             setFichaParaRemover(f);
                           }}
                           className="absolute top-2 right-2 text-red-400 hover:text-red-600"
@@ -304,7 +304,6 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         >
                           ❌
                         </button>
-                      )}
 
                       <div className="text-lg font-bold mb-2">{f.dados?.profile?.nome || "Sem Nome"}</div>
                       <div className="text-sm text-zinc-400">👤 {f.dados?.profile?.jogador || "Desconhecido"}</div>
