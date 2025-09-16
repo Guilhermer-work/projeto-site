@@ -297,11 +297,10 @@ export default function App() {
                   
                   setFichas((prev) => {
                     if (prev.some((f) => f.id === id)) return prev; 
-                     return [...prev, fichaDireta];
+                     return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
                   });
                 }
-                  setActiveId(id);
-                
+                  setActiveId(id); 
               }}
             />
           }
