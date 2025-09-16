@@ -296,8 +296,8 @@ export default function App() {
                   // garante abrir com os dados da campanha
                   
                   setFichas((prev) => {
-                    if (prev.some((f) => f.id === id)) return prev; 
-                     return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
+                    if (prev.some((fx) => fx.id === fichaDireta.id)) return prev; 
+                    return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
                   });
                 }
                   setActiveId(id); 
