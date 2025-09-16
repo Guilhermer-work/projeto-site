@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [campanhas, setCampanhas] = useState([]);
@@ -12,6 +13,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
   const [campanhaParaDeletar, setCampanhaParaDeletar] = useState(null);
   const [jogadorParaRemover, setJogadorParaRemover] = useState(null);
   const [fichaParaRemover, setFichaParaRemover] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     carregarCampanhas();
@@ -291,7 +293,9 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                     <div
                       key={f.id}
                       className="cursor-pointer relative p-4 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 hover:border-violet-500 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
-                      onClick={() => onAbrirFicha(f.id, f)}
+                      onClick={() => {onAbrirFicha(f.id, f);
+                      navigate("/");
+                    }}
                     >
 
                       <button
