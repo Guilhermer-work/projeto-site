@@ -308,14 +308,13 @@ export default function App() {
               apiFetch={apiFetch}
               fichas={fichas}
               user={user}
-              onAbrirFicha={(id, fichaDireta = null, soVisualizar = false) => {
-                if (soVisualizar && fichaDireta) {
+              onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
+                if (somenteVisualizar && fichaDireta) {
                   setFichaVisualizada({ id, ...fichaDireta });
                   setActiveId(id);
                   setSomenteVisualizar(true);
                 } else if (fichaDireta) {
                   setFichas((prev) => {
-                    const existe = prev.some((fx) => fx.id === fichaDireta.id);
                   if (existe) {
                     return prev.map((fx) =>
                     fx.id === fichaDireta.id ? { ...fx, nome: fichaDireta.nome, dados: fichaDireta.dados } : fx
