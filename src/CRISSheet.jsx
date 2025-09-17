@@ -354,7 +354,24 @@ function Roller({ onRoll }) {
   );
 }
 
-export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar = false }) {
+export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar }) {
+
+  const dadosIniciais = ficha?.dados ? ficha.dados : ficha || {};
+  const [dados, setDados] = useState(dadosIniciais);
+
+  // Atualiza estado sempre que ficha mudar
+  useEffect(() => {
+    setDados(ficha?.dados ? ficha.dados : ficha || {});
+  }, [ficha]);
+
+  // Função genérica para editar campos
+  const atualizarCampo = (campo, valor) => {
+    if (somenteVisualizar) return; // 🔒 bloqueia edição se for só visualização
+    const novos = { ...dados, [campo]: valor };
+    setDados(novos);
+    onUpdate && onUpdate(novos);
+  };
+
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
   const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
   const attrs = ficha?.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
