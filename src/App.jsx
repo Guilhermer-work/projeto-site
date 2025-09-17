@@ -298,16 +298,19 @@ export default function App() {
               fichas={fichas}
               user={user}
               onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
-                if (fichaDireta && !somenteVisualizar) {
-                  // garante abrir com os dados da campanha
-                  
+                if (fichaDireta) {
                   setFichas((prev) => {
-                    if (prev.some((fx) => fx.id === fichaDireta.id)) return prev; 
+                    const existe = prev.some((fx) => fx.id === fichaDireta.id);
+                    if (existe) {
+                      return prev.map((fx) =>
+                        fx.id === fichaDireta.id ? { ...fx, nome: fichaDireta.nome, dados: fichaDireta.dados } : fx
+                      );
+                    }
                     return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
                   });
                 }
-                  setActiveId(id); 
-                  setSomenteVisualizar(somenteVisualizar);
+                setActiveId(id);
+                setSomenteVisualizar(somenteVisualizar);
               }}
             />
           }
