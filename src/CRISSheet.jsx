@@ -372,15 +372,16 @@ export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar
   };
 
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
-  const profile = dados.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
-  const attrs = dados.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
-
-  const hp = dados.hp ?? { atual: 10, max: 10 };
-  const san = dados.san ?? { atual: 10, max: 10 };
-  const esf = dados.esf ?? { atual: 10, max: 10 };
-  const def = dados.def ?? { def: 10, bloqueio: 0, esquiva: 0 };
-  const ataques = dados.ataques ?? [];
-  const pericias = dados.pericias ?? SKILLS.map((s) => ({ ...s, treino: 0, outros: 0 }));
+  const dadosIniciais = {
+    profile : { nome: "", origem: "", jogador: "", classe: "" },
+    attrs: { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 },
+    hp: { atual: 10, max: 10 },
+    san: { atual: 10, max: 10 },
+    esf: { atual: 10, max: 10 },
+    def: { def: 10, bloqueio: 0, esquiva: 0 },
+    ataques: [],
+    pericias: [],
+  };
 
   // 🔹 Estado local apenas para UI efêmera (resultados de rolagem, abas, colapsáveis, etc.)
   const [rollResult, setRollResult] = useState(null);
