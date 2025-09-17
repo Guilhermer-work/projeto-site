@@ -314,10 +314,13 @@ export default function App() {
                   setActiveId(id);
                   setSomenteVisualizar(true);
                 } else if (fichaDireta) {
-                  setFichas((prev) => {
-                    if (prev.some((fx) => fx.id === fichaDireta.id)) return prev;
+                  if (fichaDireta.user_id === user.id) {
+                    setFichas((prev) => {
+                      if (prev.some((fx) => fx.id === fichaDireta.id)) return prev;
                     return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
                   });
+                }
+                setFichaVisualizada({ id, ...fichaDireta });
                 setActiveId(id);
                 setSomenteVisualizar(false);
                 } else {
