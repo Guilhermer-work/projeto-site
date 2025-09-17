@@ -354,34 +354,17 @@ function Roller({ onRoll }) {
   );
 }
 
-export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar }) {
-
-  const [dados, setDados] = useState(dadosIniciais);
-
-  // Atualiza estado sempre que ficha mudar
-  useEffect(() => {
-    setDados(ficha || {});
-  }, [ficha]);
-
-  // Função genérica para editar campos
-  const atualizarCampo = (campo, valor) => {
-    if (somenteVisualizar) return; // 🔒 bloqueia edição se for só visualização
-    const novos = { ...dados, [campo]: valor };
-    setDados(novos);
-    onUpdate && onUpdate(novos);
-  };
-
+export default function CRISSheet({ ficha, onUpdate, onVoltar, somenteVisualizar = false }) {
   // 🔹 Desestrutura e define padrões para evitar valores undefined em inputs controlados
-  const dadosIniciais = {
-    profile : { nome: "", origem: "", jogador: "", classe: "" },
-    attrs: { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 },
-    hp: { atual: 10, max: 10 },
-    san: { atual: 10, max: 10 },
-    esf: { atual: 10, max: 10 },
-    def: { def: 10, bloqueio: 0, esquiva: 0 },
-    ataques: [],
-    pericias: [],
-  };
+  const profile = ficha?.profile ?? { nome: "", origem: "", jogador: "", classe: "" };
+  const attrs = ficha?.attrs ?? { FOR: 0, AGI: 0, INT: 0, PRE: 0, VIG: 0 };
+
+  const hp = ficha?.hp ?? { atual: 10, max: 10 };
+  const san = ficha?.san ?? { atual: 10, max: 10 };
+  const esf = ficha?.esf ?? { atual: 10, max: 10 };
+  const def = ficha?.def ?? { def: 10, bloqueio: 0, esquiva: 0 };
+  const ataques = ficha?.ataques ?? [];
+  const pericias = ficha?.pericias ?? SKILLS.map((s) => ({ ...s, treino: 0, outros: 0 }));
 
   // 🔹 Estado local apenas para UI efêmera (resultados de rolagem, abas, colapsáveis, etc.)
   const [rollResult, setRollResult] = useState(null);
