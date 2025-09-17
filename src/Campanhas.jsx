@@ -307,7 +307,7 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         alert("❌ O dono da ficha não permitiu que outros jogadores visualizem essa ficha.");
                      }
 
-                     navigate("/");
+                     navigate("/personagens");
                     }}
                     >
                     
