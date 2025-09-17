@@ -15,8 +15,6 @@ export default function App() {
   const [fichaParaDeletar, setFichaParaDeletar] = useState(null);
   const [user, setUser] = useState(null);
   const [somenteVisualizar, setSomenteVisualizar] = useState(false);
-  const [fichaVisualizada, setFichaVisualizada] = useState(null);
-
 
 
   const API = "https://pressagios-login.onrender.com";
@@ -234,20 +232,11 @@ export default function App() {
         <Route
           path="/personagens"
           element={
-            activeId && fichaAtiva ? (
+            activeId ? (
               <CRISSheet
-                ficha={
-                  somenteVisualizar
-                    ? fichaVisualizada?.dados
-                    : fichas.find((f)  => f.id === activeId)?.dados
-                }
-                onUpdate={(novosDados) => 
-                  !somenteVisualizar && atualizarFicha(activeId, novosDados)
-                }
-                onVoltar={() => {
-                  setActiveId(null);
-                  setFichaVisualizada(null);
-                }}
+                ficha={fichas.find((f) => f.id === activeId)?.dados}
+                onUpdate={(novosDados) => atualizarFicha(activeId, novosDados)}
+                onVoltar={() => setActiveId(null)}
                 somenteVisualizar={somenteVisualizar}
               />
             ) : (
@@ -309,25 +298,19 @@ export default function App() {
               fichas={fichas}
               user={user}
               onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
-                if (somenteVisualizar && fichaDireta) {
-                  setFichaVisualizada({ id, ...fichaDireta });
-                  setActiveId(id);
-                  setSomenteVisualizar(true);
-                } else if (fichaDireta) {
+                if (fichaDireta) {
                   setFichas((prev) => {
-                  if (existe) {
-                    return prev.map((fx) =>
-                    fx.id === fichaDireta.id ? { ...fx, nome: fichaDireta.nome, dados: fichaDireta.dados } : fx
-                  );
+                    const existe = prev.some((fx) => fx.id === fichaDireta.id);
+                    if (existe) {
+                      return prev.map((fx) =>
+                        fx.id === fichaDireta.id ? { ...fx, nome: fichaDireta.nome, dados: fichaDireta.dados } : fx
+                      );
+                    }
+                    return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
+                  });
                 }
-                  return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
-                });
                 setActiveId(id);
-                setSomenteVisualizar(false);
-                } else {
-                  setActiveId(id);
-                  setSomenteVisualizar(false);
-                }
+                setSomenteVisualizar(somenteVisualizar);
               }}
             />
           }
