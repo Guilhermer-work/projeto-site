@@ -309,20 +309,19 @@ export default function App() {
               fichas={fichas}
               user={user}
               onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
-                if (somenteVisualizar && fichaDireta) {
-                  setFichaVisualizada({ id, ...fichaDireta });
-                  setActiveId(id);
-                  setSomenteVisualizar(true);
-                } else if (fichaDireta) {
-                  if (fichaDireta.user_id === user.id) {
-                    setFichas((prev) => {
-                      if (prev.some((fx) => fx.id === fichaDireta.id)) return prev;
-                      return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
+                if (fichaDireta) {
+                  if (somenteVisualizar) {
+                    setFichaVisualizada({ id, ...fichaDireta });
+                    setSomenteVisualizar(true);
+                } else if (fichaDireta.user_id === user.id) {
+                  setFichas((prev) => {
+                    if (!prev.some((fx) => fx.id === fichaDireta.id)) return prev;
+                    return [...prev, { id: fichaDireta.nome, dados: fichaDireta.dados}];
                   });
-                } else {
-                  setFichaVisualizada({ id, ...fichaDireta });
+                  setSomenteVisualizar(false);
                 }
-                
+                  setActiveId(id);
+              } else {
                   setActiveId(id);
                   setSomenteVisualizar(false);
                 }
