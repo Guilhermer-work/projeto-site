@@ -238,8 +238,8 @@ export default function App() {
               <CRISSheet
                 ficha={
                   somenteVisualizar
-                    ? fichaVisualizada
-                    : fichas.find((f) => f.id === activeId)
+                    ? fichaVisualizada?.dados
+                    : fichas.find((f) => f.id === activeId)?.dados
                 }
                 onUpdate={(novosDados) => 
                   !somenteVisualizar && atualizarFicha(activeId, novosDados)
@@ -314,13 +314,10 @@ export default function App() {
                   setActiveId(id);
                   setSomenteVisualizar(true);
                 } else if (fichaDireta) {
-                  if (fichaDireta.user_id === user.id) {
-                    setFichas((prev) => {
-                      if (prev.some((fx) => fx.id === fichaDireta.id)) return prev;
+                  setFichas((prev) => {
+                    if (prev.some((fx) => fx.id === fichaDireta.id)) return prev;
                     return [...prev, { id, nome: fichaDireta.nome, dados: fichaDireta.dados }];
                   });
-                }
-                setFichaVisualizada({ id, ...fichaDireta });
                 setActiveId(id);
                 setSomenteVisualizar(false);
                 } else {
