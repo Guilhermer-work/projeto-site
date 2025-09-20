@@ -17,6 +17,62 @@ export default function App() {
   const [somenteVisualizar, setSomenteVisualizar] = useState(false);
   const [fichaVisualizada, setFichaVisualizada] = useState(null);
 
+  // função para abrir ficha (use essa função no Route /campanhas como onAbrirFicha={abrirFicha})
+const abrirFicha = (id, fichaDireta = null, somenteVisualizarFlag = false, isMestre = false) => {
+  // garante activeId e flag primeiro
+  setActiveId(id);
+  setSomenteVisualizar(!!somenteVisualizarFlag);
+
+  if (!fichaDireta) {
+    // não veio com dados diretos da campanha, vamos depender do que já temos em `fichas`
+    setFichaVisualizada(null);
+    return;
+  }
+
+  // normaliza objeto da ficha (garante id/nome/dados corretos)
+  const fichaObj = {
+    id: fichaDireta.id,
+    nome: fichaDireta.nome,
+    dados: fichaDireta.dados ?? fichaDireta.dados, // caso já seja objeto ou string
+    user_id: fichaDireta.user_id,
+    // ... qualquer outro campo que precise
+  };
+
+  // Caso 1: somenteVisualizar (outros jogadores que não são dono nem mestre) -> apenas mostra leitura
+  if (somenteVisualizarFlag) {
+    setFichaVisualizada(fichaObj);
+    setSomenteVisualizar(true);
+    return;
+  }
+
+  // Caso 2: edição (não somenteVisualizar)
+  // - se for dono da ficha -> garantir que esteja no acervo (fichas) e abrir para edição
+  if (fichaObj.user_id === user.id) {
+    setFichaVisualizada(null); // limpa qualquer visualização temporária
+    setSomenteVisualizar(false);
+
+    setFichas((prev) => {
+      // se já existe, não adiciona (evita duplicação)
+      if (prev.some((fx) => fx.id === fichaObj.id)) return prev;
+      return [...prev, { id: fichaObj.id, nome: fichaObj.nome, dados: fichaObj.dados }];
+    });
+
+    return;
+  }
+
+  // Caso 3: não é dono (provavelmente mestre)
+  // Mestre deve poder **abrir/editar** mas **NÃO** duplicar a ficha em seu acervo
+  if (isMestre) {
+    setFichaVisualizada(fichaObj);
+    setSomenteVisualizar(false); // permite edição no CRISheet quando implementado (CRISSheet deve usar somenteVisualizar para bloquear)
+    return;
+  }
+
+  // Fallback: se não se encaixa, apenas guarda como visualização
+  setFichaVisualizada(fichaObj);
+  setSomenteVisualizar(true);
+};
+
 
 
   const API = "https://pressagios-login.onrender.com";
@@ -308,24 +364,7 @@ export default function App() {
               apiFetch={apiFetch}
               fichas={fichas}
               user={user}
-              onAbrirFicha={(id, fichaDireta = null, somenteVisualizar = false) => {
-                if (fichaDireta) {
-                  if (somenteVisualizar) {
-                    setFichaVisualizada({ id, ...fichaDireta });
-                    setSomenteVisualizar(true);
-                } else if (fichaDireta.user_id === user.id) {
-                  setFichas((prev) => {
-                    if (!prev.some((fx) => fx.id === fichaDireta.id)) return prev;
-                    return [...prev, { id: fichaDireta.nome, dados: fichaDireta.dados}];
-                  });
-                  setSomenteVisualizar(false);
-                }
-                  setActiveId(id);
-              } else {
-                  setActiveId(id);
-                  setSomenteVisualizar(false);
-                }
-              }}
+              onAbrirFicha={abrirFicha}
             />
           }
         />
