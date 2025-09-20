@@ -299,18 +299,18 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         const ehMestre = campanhaAtiva.user_id === user.id;
 
                       if (ehDono) {
-                        onAbrirFicha(f.id, f);
+                        onAbrirFicha(f.id, f, false, false);
                       } else if (ehMestre) {
-                       onAbrirFicha(f.id, f, true);
+                       onAbrirFicha(f.id, f, false, true);
                         
                       } else if (f.visivel) {
-                        onAbrirFicha(f.id, f, true);
+                        onAbrirFicha(f.id, f, true, false);
 
                       } else {
                         alert("❌ O dono da ficha não permitiu que outros jogadores visualizem essa ficha.");
                      }
 
-                     navigate("/");
+                     navigate("/personagens");
                     }}
                     >
                     
