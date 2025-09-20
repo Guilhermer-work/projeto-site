@@ -298,11 +298,14 @@ export default function Campanhas({ apiFetch, fichas, onAbrirFicha, user }) {
                         const ehDono = f.user_id === user.id;
                         const ehMestre = campanhaAtiva.user_id === user.id;
 
-                      if (ehDono || ehMestre) {
+                      if (ehDono) {
                         onAbrirFicha(f.id, f);
+                      } else if (ehMestre) {
+                        onAbrirFicha(f.id, f, false, true); 
+                        
                       } else if (f.visivel) {
-                        // abre como somente leitura
                         onAbrirFicha(f.id, f, true);
+                        
                       } else {
                         alert("❌ O dono da ficha não permitiu que outros jogadores visualizem essa ficha.");
                      }
