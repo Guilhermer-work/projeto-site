@@ -238,8 +238,8 @@ export default function App() {
               <CRISSheet
                 ficha={
                   somenteVisualizar
-                    ? fichaVisualizada?.dados
-                    : fichas.find((f) => f.id === activeId)?.dados
+                    ? fichaVisualizada
+                    : fichas.find((f) => f.id === activeId)
                 }
                 onUpdate={(novosDados) => 
                   !somenteVisualizar && atualizarFicha(activeId, novosDados)
