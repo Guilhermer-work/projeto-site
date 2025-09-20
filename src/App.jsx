@@ -63,8 +63,25 @@ const abrirFicha = (id, fichaDireta = null, somenteVisualizarFlag = false, isMes
   // Caso 3: não é dono (provavelmente mestre)
   // Mestre deve poder **abrir/editar** mas **NÃO** duplicar a ficha em seu acervo
   if (isMestre) {
+    if (!fichaDireta.dados) {
+      apiFetch(`/fichas/${fichaDireta.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setFichasVisualizada({
+            id: data.id,
+            nome: data.nome,
+            dados: data.dados,
+            user_id: data.user_id
+          });
+          setSomenteVisualizar(false);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar ficha para mestre:", err);
+        });
+      } else {
     setFichaVisualizada(fichaObj);
     setSomenteVisualizar(false); // permite edição no CRISheet quando implementado (CRISSheet deve usar somenteVisualizar para bloquear)
+    }
     return;
   }
 
