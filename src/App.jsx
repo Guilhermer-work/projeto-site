@@ -67,7 +67,7 @@ const abrirFicha = (id, fichaDireta = null, somenteVisualizarFlag = false, isMes
       apiFetch(`/fichas/${fichaDireta.id}`)
         .then(res => res.json())
         .then(data => {
-          setFichasVisualizada({
+          setFichaVisualizada({
             id: data.id,
             nome: data.nome,
             dados: data.dados,
